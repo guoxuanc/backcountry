@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Hetch Hetchy Loop · May 16–19, 2026</title>
+<script src="https://unpkg.com/maplibre-gl@4.5.2/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4.5.2/dist/maplibre-gl.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0c0c0e}
+:root{
+  --bg:#0c0c0e;
+  --panel-bg:rgba(9,9,11,0.97);
+  --border:rgba(255,255,255,0.07);
+  --text:#ddd8d0;
+  --dim:#7a746e;
+  --accent:#c4865a;
+  --accent-glow:rgba(196,134,90,0.1);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --mono:'JetBrains Mono',monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  --pw:340px
+}
+#map{position:fixed;inset:0}
+/* MapLibre overrides */
+.maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(0,0,0,0.5)!important;color:#888!important}
+.maplibregl-ctrl-attrib a{color:#888!important}
+.maplibregl-ctrl-group{background:rgba(9,9,11,0.88)!important;border:1px solid var(--border)!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.maplibregl-ctrl-group button{background:transparent!important;border-bottom:1px solid var(--border)!important}
+.maplibregl-ctrl-group button:last-child{border-bottom:none!important}
+.maplibregl-ctrl-icon{filter:invert(0.7)}
+/* Panel */
+#panel{
+  position:fixed;right:0;top:0;bottom:0;
+  width:var(--pw);
+  background:var(--panel-bg);
+  -webkit-backdrop-filter:blur(28px) saturate(160%);
+  backdrop-filter:blur(28px) saturate(160%);
+  border-left:1px solid var(--border);
+  display:flex;flex-direction:column;
+  z-index:100;overflow:hidden
+}
+@media(max-width:767px){
+  #panel{right:0;left:0;bottom:0;top:auto;width:100%;
+    height:76px;border-left:none;border-top:1px solid var(--border);
+    border-radius:18px 18px 0 0;
+    transition:height .38s cubic-bezier(.4,0,.2,1)}
+  #panel.peek{height:76px}
+  #panel.open{height:68vh}
+  #map{bottom:76px;height:calc(100% - 76px)}
+}
+.drag-handle{display:none;width:36px;height:4px;background:rgba(255,255,255,.18);border-radius:2px;margin:10px auto 0;cursor:n-resize;flex-shrink:0}
+@media(max-width:767px){.drag-handle{display:block}}
+/* Header */
+.ph{padding:26px 24px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+@media(max-width:767px){.ph{padding:6px 20px 10px;display:flex;align-items:center;gap:12px}}
+.eyebrow{font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-bottom:5px}
+@media(max-width:767px){.eyebrow{display:none}}
+.trip-title{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.1;color:var(--text);letter-spacing:.01em}
+@media(max-width:767px){.trip-title{font-size:18px;flex:1}}
+.trip-meta{display:flex;gap:7px;margin-top:5px;font-family:var(--mono);font-size:9.5px;color:var(--dim);flex-wrap:wrap}
+@media(max-width:767px){.trip-meta{display:none}}
+.trip-meta .sep{color:var(--border)}
+/* Day tabs */
+.day-tabs{display:flex;gap:0;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.day-tab{flex:1;background:none;border:none;cursor:pointer;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:8px;transition:background .2s}
+.day-tab:hover{background:rgba(255,255,255,.04)}
+.day-tab.active{background:rgba(255,255,255,.07)}
+.dt-dot{width:8px;height:8px;border-radius:50%;opacity:.45;transition:opacity .2s,transform .2s}
+.day-tab.active .dt-dot{opacity:1;transform:scale(1.35)}
+.dt-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--dim);transition:color .2s}
+.day-tab.active .dt-lbl{color:var(--text)}
+.dt-date{font-family:var(--mono);font-size:8px;color:var(--dim);opacity:.55}
+/* Scroll area */
+.ps{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent}
+.ps::-webkit-scrollbar{width:3px}
+.ps::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08)}
+/* Day card */
+.dc{padding:18px 22px 14px;border-bottom:1px solid var(--border)}
+.dc-title{font-family:var(--serif);font-size:22px;font-weight:400;line-height:1.2;margin-bottom:2px}
+.dc-sub{font-family:var(--mono);font-size:8.5px;color:var(--dim);letter-spacing:.04em;margin-bottom:14px;line-height:1.55}
+.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.si{display:flex;flex-direction:column;gap:3px}
+.sl{font-family:var(--mono);font-size:7.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+.sv{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--text)}
+.su{font-size:8.5px;font-weight:300;color:var(--dim);margin-left:1px}
+.dn{font-family:var(--sans);font-size:11.5px;line-height:1.65;color:var(--dim)}
+/* Elev chart */
+.ew{padding:0 22px 14px;border-bottom:1px solid var(--border)}
+.el{font-family:var(--mono);font-size:7.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;margin-bottom:6px;padding-top:14px}
+#ec{width:100%;height:52px;display:block}
+/* Sections */
+.sec{padding:18px 22px;border-bottom:1px solid var(--border)}
+.sec-t{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:11px}
+.sec-b{font-family:var(--sans);font-size:11.5px;line-height:1.7;color:var(--dim)}
+.sec-b p{margin-bottom:9px}
+.sec-b p:last-child{margin-bottom:0}
+.risk-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-bottom:9px}
+.r-ml{background:rgba(245,197,24,.1);color:#E8C84A;border:1px solid rgba(245,197,24,.22)}
+.r-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.wt{list-style:none;margin-top:9px}
+.wt li{display:flex;align-items:flex-start;gap:8px;font-size:11.5px;color:var(--dim);line-height:1.6;margin-bottom:6px}
+.wt li::before{content:'—';color:var(--accent);flex-shrink:0;margin-top:1px}
+/* Camps */
+.cl{display:flex;flex-direction:column;gap:16px}
+.ci{display:flex;gap:11px;align-items:flex-start}
+.cdw{display:flex;flex-direction:column;align-items:center;padding-top:3px}
+.cd{width:10px;height:10px;border-radius:50%;border:2px solid;flex-shrink:0}
+.cline{width:1px;flex:1;min-height:18px;background:var(--border);margin-top:3px}
+.cinfo{flex:1}
+.cn{font-family:var(--serif);font-size:15px;font-weight:400;color:var(--text);line-height:1.2}
+.cm{font-family:var(--mono);font-size:8.5px;color:var(--dim);margin-top:2px;letter-spacing:.04em}
+.cd2{font-size:11px;color:var(--dim);line-height:1.5;margin-top:4px}
+/* Map controls */
+#mc{position:fixed;left:16px;top:16px;display:flex;flex-direction:column;gap:6px;z-index:50}
+@media(max-width:767px){#mc{top:10px;left:10px}}
+.mb{background:rgba(9,9,11,.88);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--border);color:var(--dim);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:7px 13px;border-radius:6px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.mb:hover{color:var(--text);border-color:rgba(255,255,255,.14)}
+.mb.on{background:var(--accent-glow);color:var(--accent);border-color:rgba(196,134,90,.28)}
+/* Popup */
+.maplibregl-popup-content{background:rgba(9,9,11,.97)!important;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--border)!important;border-radius:10px!important;padding:13px 16px!important;box-shadow:0 8px 28px rgba(0,0,0,.55)!important;max-width:210px}
+.maplibregl-popup-tip{display:none!important}
+.maplibregl-popup-close-button{color:var(--dim)!important;font-size:15px!important;right:8px!important;top:6px!important;line-height:1}
+.pn{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.pname{font-family:var(--serif);font-size:16px;color:var(--text);margin-bottom:5px;line-height:1.2}
+.pele{font-family:var(--mono);font-size:10px;color:var(--dim)}
+/* Animations */
+.dc,.ew{animation:fu .28s ease}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div id="panel">
+  <div class="drag-handle" id="dh"></div>
+  <div class="ph">
+    <div class="eyebrow">Yosemite National Park · May 2026</div>
+    <div class="trip-title">Hetch Hetchy Loop</div>
+    <div class="trip-meta">
+      <span>32.6 mi</span><span class="sep">·</span>
+      <span>~9,600 ft gain</span><span class="sep">·</span>
+      <span>4 days</span><span class="sep">·</span>
+      <span>2 hikers</span>
+    </div>
+  </div>
+  <div class="day-tabs" id="tabs"></div>
+  <div class="ps" id="ps">
+    <div class="dc" id="dc"></div>
+    <div class="ew" id="ew">
+      <div class="el">Elevation Profile</div>
+      <svg id="ec" viewBox="0 0 292 52" preserveAspectRatio="none"></svg>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Water Conditions · Day 3 Focus</div>
+      <div class="sec-b">
+        <div class="risk-badge r-ml"><span class="r-dot"></span>Moderate–Low Risk · 2026</div>
+        <p>Low snow year — Tuolumne drainage at 25% of May 1 average. The melt pulse arrived early; by your trip dates the drainage is on a declining flow curve, with the Hetch Hetchy gauge currently at historical median and falling.</p>
+        <p>The Falls Creek corridor in Jack Main Canyon (miles 2–5 of Day 3, ~7,600 ft) is the flood zone in higher-snow years. This year expect elevated-but-passable conditions — likely knee-depth fords vs. the thigh-to-waist depth of a normal year.</p>
+        <ul class="wt">
+          <li>Cross Falls Creek before noon — diurnal snowmelt peaks mid-afternoon</li>
+          <li>Trekking poles out, hip belt unbuckled for any ford</li>
+          <li>Tiltil Valley is already flooded — Jack Main Canyon lags behind at higher elevation</li>
+          <li>No precipitation forecast May 16–19; flows will continue declining</li>
+          <li>From Night 2 ridge camp, assess canyon conditions before descending</li>
+        </ul>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Camps</div>
+      <div class="cl">
+        <div class="ci">
+          <div class="cdw"><div class="cd" style="border-color:#F5C518"></div><div class="cline"></div></div>
+          <div class="cinfo">
+            <div class="cn">Rancheria Falls</div>
+            <div class="cm">Night 1 · May 16 · 4,501 ft · Zone 88</div>
+            <div class="cd2">Find sites off the main trail, 40+ paces from water. Established fire rings among large granite outcrops. Popular area — go early for a quiet spot.</div>
+          </div>
+        </div>
+        <div class="ci">
+          <div class="cdw"><div class="cd" style="border-color:#E8571A"></div><div class="cline"></div></div>
+          <div class="cinfo">
+            <div class="cn">Jack Main Canyon Ridge</div>
+            <div class="cm">Night 2 · May 17 · 8,458 ft</div>
+            <div class="cd2">High exposed bench above the canyon descent. Panoramic views. From here you can assess Falls Creek below before committing to the morning descent.</div>
+          </div>
+        </div>
+        <div class="ci">
+          <div class="cdw"><div class="cd" style="border-color:#52C78E"></div></div>
+          <div class="cinfo">
+            <div class="cn">Lower Frog Creek</div>
+            <div class="cm">Night 3 · May 18 · 6,283 ft · Zone 88</div>
+            <div class="cd2">Confirmed pool water source. ~4.9 miles from trailhead makes Tuesday a short, easy exit. Lower elevation, warmer night. Early season means likely quiet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="height:28px"></div>
+  </div>
+</div>
+
+<div id="mc">
+  <button class="mb on" id="b3d" onclick="toggle3d()">3D Terrain</button>
+  <button class="mb" onclick="flyAll()">Full Route</button>
+</div>
+
+<script>
+const ROUTE=[[[-119.78719,37.94476,1210],[-119.78742,37.94536,1204],[-119.78789,37.94561,1188],[-119.78808,37.94612,1173],[-119.78754,37.94658,1163],[-119.78789,37.94769,1121],[-119.78896,37.94836,1158],[-119.78968,37.95019,1167],[-119.78944,37.95067,1162],[-119.78901,37.95115,1160],[-119.78899,37.95178,1166],[-119.78859,37.95246,1160],[-119.78846,37.95339,1161],[-119.78789,37.95459,1162],[-119.78756,37.95551,1169],[-119.78727,37.9563,1193],[-119.78697,37.95692,1206],[-119.78613,37.95725,1214],[-119.7855,37.95744,1225],[-119.78486,37.95793,1234],[-119.78436,37.95763,1233],[-119.78384,37.95753,1232],[-119.78295,37.95764,1226],[-119.78293,37.95785,1228],[-119.78233,37.95874,1228],[-119.7819,37.95899,1223],[-119.7814,37.95896,1219],[-119.78121,37.95895,1217],[-119.7812,37.95885,1215],[-119.78144,37.95859,1207],[-119.78088,37.95835,1204],[-119.78047,37.95842,1204],[-119.77989,37.95864,1206],[-119.77926,37.95871,1201],[-119.77829,37.95883,1200],[-119.77738,37.95904,1207],[-119.77702,37.95924,1213],[-119.77645,37.95962,1223],[-119.77612,37.95978,1223],[-119.77568,37.9601,1220],[-119.77526,37.96062,1231],[-119.7745,37.96086,1236],[-119.77371,37.96098,1229],[-119.77315,37.96123,1225],[-119.77248,37.96169,1215],[-119.77197,37.96233,1208],[-119.77112,37.96273,1208],[-119.77033,37.96292,1213],[-119.76953,37.96311,1211],[-119.76869,37.96333,1219],[-119.76741,37.96324,1194],[-119.76738,37.96314,1186],[-119.76705,37.9631,1174],[-119.76668,37.96328,1178],[-119.7656,37.96361,1186],[-119.7648,37.96368,1194],[-119.76404,37.96359,1203],[-119.76309,37.9633,1195],[-119.76224,37.96298,1195],[-119.76171,37.9627,1223],[-119.76167,37.96299,1242],[-119.76125,37.96275,1252],[-119.76052,37.9624,1253],[-119.75917,37.96203,1255],[-119.75755,37.96188,1239],[-119.75692,37.96181,1247],[-119.75714,37.96198,1259],[-119.75722,37.96212,1273],[-119.7564,37.96195,1275],[-119.75586,37.96187,1283],[-119.75521,37.96157,1289],[-119.75431,37.96099,1305],[-119.75381,37.96067,1309],[-119.75275,37.95972,1303],[-119.75216,37.95953,1314],[-119.75167,37.95934,1308],[-119.75101,37.95884,1315],[-119.7504,37.9585,1315],[-119.74973,37.95809,1311],[-119.74889,37.95773,1309],[-119.74781,37.95758,1309],[-119.7468,37.95742,1308],[-119.74537,37.95758,1322],[-119.74473,37.95772,1333],[-119.74372,37.95791,1352],[-119.74238,37.95798,1364],[-119.74163,37.95796,1359],[-119.74068,37.95812,1356],[-119.73999,37.95816,1349],[-119.73972,37.95807,1335],[-119.73907,37.9582,1347],[-119.73945,37.95802,1331],[-119.73939,37.95796,1327],[-119.73952,37.95777,1315],[-119.73852,37.95773,1312],[-119.7381,37.95781,1315],[-119.73763,37.95782,1311],[-119.73726,37.95785,1307],[-119.737,37.95803,1318],[-119.73686,37.95798,1313],[-119.73622,37.95807,1313],[-119.73565,37.95812,1309],[-119.73432,37.95826,1300],[-119.73361,37.95847,1305],[-119.73271,37.95879,1303],[-119.73215,37.95876,1292],[-119.73165,37.95885,1292],[-119.73056,37.95898,1282],[-119.72961,37.95929,1279],[-119.729,37.95946,1281],[-119.72853,37.95942,1278],[-119.72815,37.95949,1280],[-119.72745,37.95937,1273],[-119.72691,37.95924,1264],[-119.72725,37.95907,1258],[-119.72676,37.95911,1258],[-119.72638,37.95921,1257],[-119.72574,37.9595,1255],[-119.72535,37.95981,1257],[-119.72507,37.95993,1256],[-119.72484,37.95963,1243],[-119.72464,37.95962,1256],[-119.72457,37.95949,1263],[-119.7244,37.95915,1277],[-119.72402,37.95905,1289],[-119.72366,37.95924,1297],[-119.7235,37.95948,1300],[-119.72326,37.95959,1303],[-119.7231,37.9595,1309],[-119.72305,37.9595,1311],[-119.72279,37.95906,1318],[-119.72264,37.95889,1319],[-119.72173,37.95871,1332],[-119.72129,37.9585,1337],[-119.72105,37.95774,1343],[-119.72065,37.95747,1351],[-119.72006,37.95723,1352],[-119.71934,37.9574,1358],[-119.71874,37.95722,1355],[-119.71775,37.95691,1364],[-119.71693,37.95649,1364],[-119.71607,37.95627,1368],[-119.71515,37.95601,1374],[-119.71499,37.95563,1372]],[[-119.71509,37.95579,1373],[-119.71493,37.95636,1378],[-119.71465,37.95652,1380],[-119.71478,37.957,1389],[-119.71447,37.95735,1399],[-119.7139,37.95718,1399],[-119.71304,37.957,1401],[-119.71202,37.95669,1411],[-119.71175,37.95671,1416],[-119.71162,37.95681,1422],[-119.71117,37.95697,1434],[-119.71128,37.95723,1448],[-119.71086,37.95741,1459],[-119.71068,37.95756,1467],[-119.71062,37.95776,1478],[-119.71036,37.95799,1488],[-119.70985,37.9583,1500],[-119.71002,37.95848,1510],[-119.70982,37.95876,1526],[-119.70945,37.95916,1548],[-119.70982,37.95954,1571],[-119.71017,37.95972,1585],[-119.71166,37.96,1598],[-119.71049,37.96026,1612],[-119.71097,37.96051,1623],[-119.71049,37.96083,1640],[-119.71027,37.96116,1658],[-119.70959,37.9615,1668],[-119.70932,37.96173,1673],[-119.70933,37.96188,1678],[-119.70912,37.96219,1684],[-119.70847,37.9627,1691],[-119.70774,37.96293,1694],[-119.70709,37.96302,1696],[-119.70643,37.96304,1691],[-119.7059,37.96338,1697],[-119.70546,37.96357,1698],[-119.70483,37.96393,1710],[-119.70377,37.96471,1723],[-119.70284,37.96529,1731],[-119.7025,37.96575,1740],[-119.70163,37.96644,1753],[-119.70093,37.96687,1756],[-119.69994,37.96776,1765],[-119.69868,37.96855,1764],[-119.69777,37.96886,1755],[-119.697,37.96915,1753],[-119.69631,37.96946,1754],[-119.69552,37.96994,1754],[-119.69437,37.97042,1755],[-119.69383,37.97058,1751],[-119.69284,37.97094,1740],[-119.69165,37.97117,1717],[-119.69039,37.97154,1705],[-119.69009,37.97278,1701],[-119.68906,37.97346,1701],[-119.68831,37.97373,1702],[-119.68665,37.97394,1708],[-119.68541,37.97402,1720],[-119.68544,37.9742,1727],[-119.68536,37.9743,1730],[-119.68518,37.97457,1743],[-119.68463,37.97475,1755],[-119.68509,37.97496,1762],[-119.68472,37.97525,1772],[-119.68487,37.97534,1777],[-119.68481,37.97552,1786],[-119.68496,37.97575,1796],[-119.68553,37.97604,1804],[-119.68617,37.97662,1820],[-119.68625,37.97681,1827],[-119.68664,37.97702,1837],[-119.68765,37.97727,1852],[-119.68867,37.97732,1865],[-119.68912,37.97752,1877],[-119.68926,37.9776,1881],[-119.69012,37.97734,1885],[-119.69059,37.97735,1894],[-119.69047,37.97758,1903],[-119.69057,37.97764,1908],[-119.69127,37.97778,1923],[-119.69107,37.9788,1931],[-119.69077,37.97885,1947],[-119.6905,37.97913,1962],[-119.69022,37.97902,1972],[-119.68974,37.97902,1978],[-119.68993,37.97928,1987],[-119.68933,37.97957,2010],[-119.68911,37.97982,2024],[-119.68875,37.98003,2039],[-119.68822,37.98032,2056],[-119.68763,37.98073,2073],[-119.68665,37.98139,2097],[-119.68711,37.98143,2089],[-119.68698,37.982,2096],[-119.6871,37.98278,2102],[-119.68706,37.98345,2106],[-119.68643,37.98446,2119],[-119.686,37.98509,2132],[-119.68591,37.9852,2136],[-119.68565,37.98523,2146],[-119.6855,37.98542,2153],[-119.68447,37.98454,2163],[-119.68408,37.98518,2175],[-119.68349,37.98574,2179],[-119.68298,37.98663,2192],[-119.68286,37.98724,2208],[-119.68215,37.98771,2221],[-119.68169,37.98799,2228],[-119.68119,37.98884,2251],[-119.68014,37.9895,2274],[-119.68008,37.98976,2283],[-119.67992,37.98999,2293],[-119.6791,37.99041,2308],[-119.67798,37.99049,2307],[-119.67704,37.99084,2318],[-119.67684,37.99117,2331],[-119.67624,37.99169,2345],[-119.67588,37.99214,2362],[-119.67611,37.99227,2367],[-119.67563,37.99251,2373],[-119.67478,37.99279,2374],[-119.67418,37.99303,2379],[-119.67316,37.99317,2381],[-119.67289,37.99361,2388],[-119.67212,37.99403,2393],[-119.67126,37.99492,2399],[-119.66995,37.9953,2396],[-119.66869,37.99668,2403],[-119.66782,37.99681,2412],[-119.66709,37.99695,2417],[-119.66642,37.99766,2425],[-119.66565,37.99816,2432],[-119.66484,37.99928,2435],[-119.6644,38.00028,2439],[-119.66338,38.00172,2454],[-119.66282,38.00274,2456],[-119.6621,38.00388,2461],[-119.6613,38.00497,2462],[-119.66086,38.00636,2461],[-119.66045,38.00718,2462],[-119.66016,38.0085,2463],[-119.65995,38.00943,2463],[-119.66002,38.01046,2469],[-119.65971,38.01142,2468],[-119.65946,38.01245,2470],[-119.65854,38.01372,2471],[-119.65821,38.01445,2474],[-119.65773,38.01524,2473],[-119.65672,38.01586,2474],[-119.65605,38.01633,2478],[-119.65533,38.0174,2486],[-119.65501,38.01803,2495],[-119.65452,38.01844,2497],[-119.65425,38.01926,2516],[-119.65386,38.01991,2529],[-119.65371,38.02053,2543],[-119.65481,38.02041,2546],[-119.65572,38.0207,2551],[-119.65604,38.02145,2559],[-119.65567,38.02198,2563],[-119.65479,38.02257,2583],[-119.65372,38.023,2596],[-119.65237,38.02403,2594],[-119.65121,38.02567,2597],[-119.65077,38.02655,2598],[-119.64999,38.02806,2603],[-119.64987,38.02888,2608],[-119.64976,38.03136,2627],[-119.64872,38.033,2629],[-119.6487,38.03395,2624],[-119.64915,38.0347,2619],[-119.64963,38.03609,2607],[-119.64966,38.03686,2606],[-119.64981,38.03808,2604],[-119.65011,38.03901,2604],[-119.6497,38.03987,2608],[-119.64935,38.04036,2615],[-119.64925,38.04085,2622],[-119.64965,38.04146,2629],[-119.64879,38.0421,2633],[-119.64808,38.04255,2632],[-119.64706,38.04335,2626],[-119.64637,38.04412,2597],[-119.64681,38.04477,2602],[-119.64748,38.04545,2596],[-119.64715,38.04599,2586],[-119.64738,38.04633,2578]],[[-119.64741,38.04629,2579],[-119.64733,38.04667,2570],[-119.64695,38.04768,2560],[-119.64746,38.0483,2562],[-119.64795,38.04846,2547],[-119.64848,38.04844,2524],[-119.64905,38.0484,2510],[-119.64965,38.04815,2504],[-119.65045,38.04747,2497],[-119.65117,38.04694,2482],[-119.65217,38.04697,2478],[-119.65277,38.04633,2461],[-119.65371,38.04533,2451],[-119.65487,38.04482,2450],[-119.65563,38.04443,2451],[-119.65657,38.04372,2441],[-119.6569,38.0437,2441],[-119.65776,38.04326,2424],[-119.65861,38.0437,2412],[-119.65888,38.0438,2405],[-119.65933,38.04364,2398],[-119.65951,38.04353,2394],[-119.66003,38.04381,2388],[-119.66033,38.04359,2381],[-119.66068,38.04374,2374],[-119.66119,38.04419,2370],[-119.66195,38.0446,2367],[-119.66303,38.04411,2368],[-119.66431,38.04403,2375],[-119.66544,38.04362,2359],[-119.66594,38.04347,2355],[-119.66547,38.04405,2352],[-119.66565,38.04444,2352],[-119.66586,38.04463,2353],[-119.66684,38.0448,2355],[-119.66688,38.04515,2343],[-119.66721,38.04556,2342],[-119.66734,38.04614,2342],[-119.66847,38.0463,2340],[-119.66866,38.04671,2339],[-119.66955,38.04721,2341],[-119.67056,38.04693,2341],[-119.67245,38.04676,2341],[-119.67445,38.04604,2341],[-119.67594,38.04547,2339],[-119.67702,38.04529,2341],[-119.67778,38.04522,2339],[-119.6789,38.04533,2339],[-119.68024,38.04545,2350],[-119.68076,38.04476,2359],[-119.6816,38.04411,2352],[-119.68193,38.04385,2341],[-119.68265,38.0434,2335],[-119.68324,38.04286,2334],[-119.68553,38.04294,2334],[-119.68579,38.04324,2336],[-119.68589,38.04399,2342],[-119.68595,38.04486,2343],[-119.6864,38.04527,2342],[-119.68662,38.04602,2340],[-119.68712,38.04636,2341],[-119.68813,38.04646,2342],[-119.68921,38.04603,2341],[-119.69006,38.04557,2340],[-119.69045,38.04489,2340],[-119.69058,38.04441,2339],[-119.6918,38.0435,2335],[-119.69234,38.04355,2331],[-119.69328,38.04359,2330],[-119.69439,38.04356,2340],[-119.69498,38.04344,2341],[-119.69566,38.04319,2347],[-119.69552,38.04272,2336],[-119.69605,38.04272,2342],[-119.6967,38.04245,2329],[-119.69733,38.04251,2323],[-119.69812,38.0427,2319],[-119.69945,38.04297,2313],[-119.70015,38.04288,2320],[-119.70123,38.04242,2327],[-119.70244,38.04193,2329],[-119.70281,38.04144,2326],[-119.70334,38.04138,2324],[-119.70454,38.04082,2304],[-119.70586,38.04017,2307],[-119.70671,38.04002,2310],[-119.70703,38.03964,2293],[-119.70714,38.03926,2292],[-119.70744,38.03882,2288],[-119.70826,38.03858,2287],[-119.70882,38.03852,2288],[-119.70964,38.03789,2275],[-119.71003,38.03768,2275],[-119.71061,38.03731,2275],[-119.71109,38.03712,2278],[-119.71213,38.03685,2304],[-119.71266,38.03659,2330],[-119.71325,38.03648,2343],[-119.71419,38.03621,2357],[-119.7153,38.03597,2361],[-119.716,38.03578,2369],[-119.71646,38.03613,2372],[-119.7179,38.03559,2390],[-119.71848,38.03512,2404],[-119.71927,38.03452,2424],[-119.71963,38.034,2435],[-119.71987,38.03361,2443],[-119.72035,38.03336,2451],[-119.7209,38.03281,2464],[-119.72127,38.03228,2475],[-119.72186,38.03172,2476],[-119.72351,38.03076,2465],[-119.72454,38.02969,2450],[-119.72478,38.02933,2443],[-119.7252,38.02869,2436],[-119.72598,38.02783,2425],[-119.72614,38.02718,2416],[-119.72745,38.02559,2404],[-119.72882,38.0247,2397],[-119.7299,38.02367,2386],[-119.73076,38.02304,2377],[-119.7314,38.02229,2373],[-119.73214,38.02154,2368],[-119.73347,38.02062,2358],[-119.73496,38.01956,2348],[-119.7368,38.01885,2334],[-119.7376,38.01842,2326],[-119.73846,38.01799,2318],[-119.73946,38.01764,2301],[-119.73971,38.01705,2296],[-119.74066,38.01637,2286],[-119.74211,38.01577,2266],[-119.74301,38.01552,2259],[-119.74458,38.01515,2248],[-119.7453,38.0148,2234],[-119.74612,38.01426,2227],[-119.74686,38.01357,2223],[-119.74687,38.01301,2223],[-119.74793,38.01259,2215],[-119.74855,38.01196,2209],[-119.74945,38.01145,2205],[-119.75055,38.01065,2198],[-119.75173,38.00985,2203],[-119.75309,38.00906,2210],[-119.7536,38.0084,2209],[-119.7554,38.00733,2185],[-119.75601,38.00701,2175],[-119.75698,38.00625,2164],[-119.75784,38.00563,2157],[-119.75808,38.00496,2150],[-119.75783,38.00381,2136],[-119.75857,38.00285,2123],[-119.75929,38.00276,2122],[-119.75973,38.00243,2121],[-119.76089,38.00222,2121],[-119.76201,38.00189,2115],[-119.76292,38.00164,2114],[-119.76386,38.00129,2098],[-119.76476,38.00114,2085],[-119.76546,38.00091,2070],[-119.76599,38.00085,2059],[-119.76906,38.00066,2046],[-119.76972,38.0005,2044],[-119.77122,37.99974,2037],[-119.77199,37.99901,2029],[-119.77317,37.99841,2018],[-119.77425,37.99769,2010],[-119.77472,37.997,2005],[-119.77504,37.99614,2001],[-119.7759,37.99588,1999],[-119.77673,37.99584,1998],[-119.77767,37.99567,1998],[-119.77872,37.99539,1997],[-119.77923,37.99493,1996],[-119.78001,37.99447,1990],[-119.78093,37.99372,1987],[-119.78244,37.99315,1986],[-119.78366,37.99187,1973],[-119.78477,37.99094,1969],[-119.78617,37.98999,1971],[-119.78708,37.98883,1962],[-119.78769,37.98745,1951],[-119.7875,37.98591,1941],[-119.78718,37.98488,1934],[-119.78633,37.98283,1914],[-119.78608,37.98202,1915],[-119.78605,37.98199,1915]],[[-119.78603,37.98197,1915],[-119.78574,37.9814,1914],[-119.78549,37.98061,1914],[-119.78685,37.98039,1914],[-119.78808,37.97933,1884],[-119.78872,37.9783,1859],[-119.78926,37.97748,1852],[-119.78936,37.97657,1844],[-119.78919,37.97622,1841],[-119.78887,37.97571,1839],[-119.78872,37.97522,1831],[-119.78837,37.97449,1819],[-119.78793,37.97384,1811],[-119.78764,37.97314,1801],[-119.78708,37.97309,1793],[-119.78624,37.97255,1769],[-119.78599,37.9726,1764],[-119.78561,37.97219,1756],[-119.78553,37.97171,1751],[-119.78582,37.97123,1750],[-119.78574,37.97109,1748],[-119.78569,37.97083,1738],[-119.78572,37.97069,1733],[-119.78538,37.97057,1725],[-119.78558,37.97036,1723],[-119.78575,37.96991,1717],[-119.78645,37.96998,1717],[-119.78836,37.9699,1704],[-119.78928,37.96983,1696],[-119.78943,37.96908,1685],[-119.79007,37.96884,1676],[-119.79039,37.96808,1662],[-119.79103,37.96758,1648],[-119.79045,37.96684,1645],[-119.79023,37.96606,1636],[-119.79029,37.96516,1622],[-119.79026,37.96409,1615],[-119.79056,37.9634,1605],[-119.79096,37.9629,1590],[-119.79114,37.96229,1577],[-119.79101,37.96192,1573],[-119.79116,37.96116,1567],[-119.79099,37.96127,1562],[-119.79033,37.96177,1547],[-119.78969,37.9621,1548],[-119.78866,37.9623,1530],[-119.78826,37.96247,1534],[-119.78832,37.96227,1525],[-119.7889,37.9616,1515],[-119.78964,37.96109,1506],[-119.79018,37.9604,1495],[-119.79029,37.96023,1492],[-119.78959,37.96064,1478],[-119.7885,37.96087,1478],[-119.78801,37.96079,1475],[-119.78858,37.96066,1466],[-119.78899,37.96038,1450],[-119.78952,37.95983,1446],[-119.78975,37.95946,1435],[-119.79007,37.95898,1436],[-119.7902,37.95867,1425],[-119.79031,37.95854,1422],[-119.78995,37.9588,1424],[-119.78956,37.95914,1414],[-119.78911,37.95932,1412],[-119.78857,37.95933,1402],[-119.78784,37.95949,1390],[-119.78718,37.95957,1386],[-119.78664,37.95967,1382],[-119.78612,37.95992,1390],[-119.7855,37.96007,1387],[-119.78487,37.96013,1375],[-119.78453,37.96016,1367],[-119.78534,37.9598,1354],[-119.78628,37.95935,1345],[-119.78701,37.95897,1335],[-119.78752,37.95862,1330],[-119.78801,37.95817,1318],[-119.78825,37.95792,1312],[-119.78836,37.95769,1306],[-119.78894,37.95721,1303],[-119.78928,37.95699,1295],[-119.78876,37.95709,1293],[-119.7882,37.95732,1285],[-119.78789,37.95751,1278],[-119.7875,37.95778,1275],[-119.78717,37.95791,1271],[-119.78679,37.95803,1267],[-119.78615,37.95819,1266],[-119.78575,37.95807,1256],[-119.78517,37.95813,1250],[-119.78456,37.95827,1247],[-119.78427,37.95807,1240],[-119.78514,37.9579,1235],[-119.78553,37.95732,1222],[-119.78642,37.95724,1217],[-119.78712,37.9568,1201],[-119.78734,37.95621,1192],[-119.78754,37.95535,1174],[-119.78799,37.95442,1162],[-119.78844,37.95326,1160],[-119.78883,37.95215,1165],[-119.78904,37.95169,1166],[-119.78911,37.95106,1161],[-119.78954,37.95062,1164],[-119.78971,37.95007,1168],[-119.78838,37.94811,1138],[-119.78756,37.947,1149],[-119.78808,37.94612,1173],[-119.78827,37.94586,1175]]];
+
+const WP=[
+  {name:"O'Shaughnessy Dam",label:"Trailhead",night:null,ele:3971,color:"#999",lon:-119.78719,lat:37.94476},
+  {name:"Rancheria Falls",label:"Night 1",night:1,ele:4501,color:"#F5C518",lon:-119.71543,lat:37.95552},
+  {name:"Jack Main Canyon Ridge",label:"Night 2",night:2,ele:8458,color:"#E8571A",lon:-119.64730,lat:38.04635},
+  {name:"Lower Frog Creek",label:"Night 3",night:3,ele:6283,color:"#52C78E",lon:-119.78820,lat:37.98251}
+];
+
+const DAYS=[
+  {lbl:"D1",date:"May 16",color:"#F5C518",
+   title:"Reservoir Trail",sub:"O'Shaughnessy Dam → Rancheria Falls",
+   dist:"6.1",gain:"1,600",se:"3,971",ee:"4,501",
+   note:"Undulating cliff trail along the Hetch Hetchy Reservoir. Mostly flat for the first 3 miles, then a sustained push to the falls camp. Most elevation in the final 2 miles.",
+   cam:{center:[-119.748,37.956],zoom:12.5,pitch:50,bearing:85}},
+  {lbl:"D2",date:"May 17",color:"#E8571A",
+   title:"The Big Climb",sub:"Rancheria Falls → Jack Main Canyon Ridge",
+   dist:"10.3",gain:"4,500",se:"4,501",ee:"8,458",
+   note:"Hardest day by a wide margin. Nearly continuous gain across 10 miles — no flat recovery sections. Budget extra time and eat well the night before.",
+   cam:{center:[-119.668,37.990],zoom:11,pitch:56,bearing:-12}},
+  {lbl:"D3",date:"May 18",color:"#52C78E",
+   title:"Canyon Traverse",sub:"Ridge → Falls Creek → Laurel Lake → Lower Frog Creek",
+   dist:"11.3",gain:"1,200",se:"8,458",ee:"6,283",
+   note:"Descend into Jack Main Canyon and traverse Falls Creek. Water crossing zone at miles 2–5 (~7,600 ft). Moderate-low risk this year. Aim to cross before noon. Longest day, gentler terrain.",
+   cam:{center:[-119.710,38.018],zoom:11,pitch:50,bearing:8}},
+  {lbl:"D4",date:"May 19",color:"#5BAAD4",
+   title:"Beehive Descent",sub:"Lower Frog Creek → O'Shaughnessy Dam",
+   dist:"4.9",gain:"~500",se:"6,283",ee:"3,854",
+   note:"The easy exit. 4.9 miles of mostly downhill through Beehive switchbacks back to the dam. Longer than it looks — plan ~2.5 hours, not 1.5.",
+   cam:{center:[-119.786,37.968],zoom:12.5,pitch:46,bearing:-165}}
+];
+
+const OV={center:[-119.714,37.997],zoom:10.3,pitch:52,bearing:-12};
+
+const map=new maplibregl.Map({
+  container:'map',
+  style:{version:8,sources:{},layers:[],glyphs:'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'},
+  center:OV.center,zoom:OV.zoom,pitch:OV.pitch,bearing:OV.bearing,
+  antialias:true,attributionControl:false
+});
+map.addControl(new maplibregl.AttributionControl({compact:true}),'bottom-right');
+map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
+
+let is3d=true,activeDay=null;
+
+map.on('load',()=>{
+  map.addSource('sat',{
+    type:'raster',
+    tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+    tileSize:256,attribution:'© Esri, Maxar, Earthstar Geographics',maxzoom:18
+  });
+  map.addLayer({id:'sat',type:'raster',source:'sat'});
+
+  map.addSource('dem',{
+    type:'raster-dem',
+    tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+    encoding:'terrarium',tileSize:256,maxzoom:15
+  });
+  map.setTerrain({source:'dem',exaggeration:1.5});
+
+  map.addSource('lbl',{
+    type:'raster',
+    tiles:['https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
+    tileSize:256,maxzoom:18
+  });
+  map.addLayer({id:'lbl',type:'raster',source:'lbl',paint:{'raster-opacity':0.82}});
+
+  map.setSky({
+    'sky-color':'#1b3055','sky-horizon-blend':0.5,
+    'horizon-color':'#7a9bba','horizon-fog-blend':0.4,
+    'fog-color':'#a0bbcc','fog-ground-blend':0.02,
+    'atmosphere-blend':['interpolate',['linear'],['zoom'],0,1,10,1,12,0]
+  });
+
+  ROUTE.forEach((coords,i)=>{
+    const data={type:'Feature',geometry:{type:'LineString',coordinates:coords.map(c=>[c[0],c[1],c[2]])}};
+    map.addSource('r'+i,{type:'geojson',data});
+    map.addLayer({id:'r'+i+'g',type:'line',source:'r'+i,
+      layout:{'line-join':'round','line-cap':'round'},
+      paint:{'line-color':DAYS[i].color,'line-width':10,'line-opacity':0.1,'line-blur':5}});
+    map.addLayer({id:'r'+i,type:'line',source:'r'+i,
+      layout:{'line-join':'round','line-cap':'round'},
+      paint:{'line-color':DAYS[i].color,
+        'line-width':['interpolate',['linear'],['zoom'],8,2,14,4.5],
+        'line-opacity':0.88}});
+  });
+
+  WP.forEach(wp=>{
+    const el=document.createElement('div');
+    const sz=wp.night?26:18;
+    el.style.cssText=`width:${sz}px;height:${sz}px;border-radius:50%;border:2.5px solid ${wp.color};background:rgba(9,9,11,.85);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 0 3px ${wp.color}20,0 2px 8px rgba(0,0,0,.5);transition:transform .2s;font-size:${wp.night?10:8}px;color:${wp.color};font-family:'JetBrains Mono',monospace;font-weight:500`;
+    el.textContent=wp.night?'N'+wp.night:'★';
+    el.onmouseenter=()=>el.style.transform='scale(1.25)';
+    el.onmouseleave=()=>el.style.transform='scale(1)';
+    const pop=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'220px'})
+      .setHTML(`<div class="pn" style="color:${wp.color}">${wp.label}</div><div class="pname">${wp.name}</div><div class="pele">${wp.ele.toLocaleString()} ft elevation</div>`);
+    new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([wp.lon,wp.lat]).setPopup(pop).addTo(map);
+  });
+
+  buildTabs();setDay(0);
+});
+
+function buildTabs(){
+  const c=document.getElementById('tabs');
+  DAYS.forEach((d,i)=>{
+    const b=document.createElement('button');
+    b.className='day-tab';b.id='t'+i;
+    b.innerHTML=`<div class="dt-dot" style="background:${d.color}"></div><div class="dt-lbl">${d.lbl}</div><div class="dt-date">${d.date}</div>`;
+    b.onclick=()=>setDay(i);c.appendChild(b);
+  });
+}
+
+function setDay(i){
+  activeDay=i;const d=DAYS[i];
+  document.querySelectorAll('.day-tab').forEach((t,j)=>t.classList.toggle('active',j===i));
+
+  const dc=document.getElementById('dc');
+  dc.innerHTML=`
+    <div class="dc-title" style="color:${d.color}">${d.title}</div>
+    <div class="dc-sub">${d.sub}</div>
+    <div class="sg">
+      <div class="si"><div class="sl">Distance</div><div class="sv">${d.dist}<span class="su">mi</span></div></div>
+      <div class="si"><div class="sl">Gain</div><div class="sv">${d.gain}<span class="su">ft</span></div></div>
+      <div class="si"><div class="sl">Elevation</div><div class="sv" style="font-size:10.5px">${d.se}→${d.ee}<span class="su">ft</span></div></div>
+    </div>
+    <div class="dn">${d.note}</div>`;
+  dc.style.animation='none';void dc.offsetWidth;dc.style.animation='';
+
+  drawChart(ROUTE[i],d.color);
+
+  DAYS.forEach((_,j)=>{
+    if(!map.getLayer('r'+j))return;
+    const on=j===i;
+    map.setPaintProperty('r'+j,'line-opacity',on?.88:.18);
+    map.setPaintProperty('r'+j+'g','line-opacity',on?.1:.03);
+    map.setPaintProperty('r'+j,'line-width',on
+      ?['interpolate',['linear'],['zoom'],8,3,14,5.5]
+      :['interpolate',['linear'],['zoom'],8,1.5,14,3]);
+  });
+
+  map.flyTo({center:d.cam.center,zoom:d.cam.zoom,pitch:d.cam.pitch,bearing:d.cam.bearing,duration:2200,essential:true});
+
+  if(window.innerWidth<768){
+    const p=document.getElementById('panel');
+    p.classList.remove('peek');p.classList.add('open');p.style.height='';
+  }
+}
+
+function drawChart(coords,color){
+  const svg=document.getElementById('ec');
+  const W=292,H=52,P=3,N=80;
+  const eles=[];
+  for(let i=0;i<N;i++){const idx=Math.round(i*(coords.length-1)/(N-1));eles.push(coords[idx][2]);}
+  const mn=Math.min(...eles),mx=Math.max(...eles),rng=mx-mn||1;
+  const xs=eles.map((_,i)=>P+(i/(N-1))*(W-2*P));
+  const ys=eles.map(e=>H-P-((e-mn)/rng)*(H-2*P-6));
+  let d=`M${xs[0]} ${ys[0]}`;
+  for(let i=1;i<N;i++)d+=` L${xs[i]} ${ys[i]}`;
+  const area=d+` L${xs[N-1]} ${H} L${xs[0]} ${H}Z`;
+  svg.innerHTML=`<defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity=".3"/><stop offset="100%" stop-color="${color}" stop-opacity=".02"/></linearGradient></defs><path d="${area}" fill="url(#eg)"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+}
+
+function toggle3d(){
+  is3d=!is3d;const btn=document.getElementById('b3d');
+  if(is3d){map.setTerrain({source:'dem',exaggeration:1.5});map.easeTo({pitch:50,duration:700});btn.classList.add('on');}
+  else{map.setTerrain(null);map.easeTo({pitch:0,duration:700});btn.classList.remove('on');}
+}
+
+function flyAll(){
+  DAYS.forEach((_,j)=>{
+    if(!map.getLayer('r'+j))return;
+    map.setPaintProperty('r'+j,'line-opacity',.88);
+    map.setPaintProperty('r'+j+'g','line-opacity',.1);
+    map.setPaintProperty('r'+j,'line-width',['interpolate',['linear'],['zoom'],8,2,14,4.5]);
+  });
+  document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));
+  activeDay=null;
+  map.flyTo({center:OV.center,zoom:OV.zoom,pitch:OV.pitch,bearing:OV.bearing,duration:2000,essential:true});
+}
+
+// Mobile drag sheet
+const panel=document.getElementById('panel'),dh=document.getElementById('dh');
+let sy=0,sh=0,drag=false;
+dh.addEventListener('touchstart',e=>{drag=true;sy=e.touches[0].clientY;sh=panel.getBoundingClientRect().height;e.preventDefault();},{passive:false});
+document.addEventListener('touchmove',e=>{
+  if(!drag)return;
+  const nh=Math.max(76,Math.min(window.innerHeight*.9,sh+(sy-e.touches[0].clientY)));
+  panel.style.height=nh+'px';panel.style.transition='none';
+},{passive:true});
+document.addEventListener('touchend',()=>{
+  if(!drag)return;drag=false;panel.style.transition='';
+  const h=panel.getBoundingClientRect().height,vh=window.innerHeight;
+  if(h<vh*.22){panel.style.height='76px';panel.classList.remove('open');}
+  else{panel.style.height=vh*.68+'px';panel.classList.add('open');}
+});
+</script>
+</body>
+</html>
