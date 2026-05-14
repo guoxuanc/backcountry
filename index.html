@@ -2,658 +2,576 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hetch Hetchy Loop · May 16–19, 2026</title>
-<script src="https://unpkg.com/maplibre-gl@4.5.2/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@4.5.2/dist/maplibre-gl.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hetch Hetchy Loop · May 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.5.2/dist/maplibre-gl.js" defer></script>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.2/dist/maplibre-gl.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10}
+html,body{height:100%;background:#fff;-webkit-text-size-adjust:100%}
 :root{
-  --pbg:rgba(8,10,14,0.97);
-  --bdr:rgba(255,255,255,0.07);
-  --tx:#d8d4cc;
-  --dim:#74706a;
-  --acc:#7ab5d4;
-  --ag:rgba(122,181,212,0.1);
-  --serif:'Cormorant Garamond',Georgia,serif;
-  --mono:'JetBrains Mono',monospace;
-  --sans:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif
-}
-/* map - explicit edges, no shorthand */
-#map{position:fixed;top:0;left:0;right:0;bottom:0}
-@media(max-width:767px){#map{bottom:72px}}
-
-/* maplibre */
-.maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(0,0,0,.55)!important;color:#666!important}
-.maplibregl-ctrl-attrib a{color:#666!important}
-.maplibregl-ctrl-group{background:rgba(8,10,14,.9)!important;border:1px solid var(--bdr)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
-.maplibregl-ctrl-group button{background:transparent!important;border-bottom:1px solid var(--bdr)!important}
-.maplibregl-ctrl-group button:last-child{border-bottom:none!important}
-.maplibregl-ctrl-icon{filter:invert(.55)}
-
-/* panel desktop */
-#panel{
-  position:fixed;right:16px;top:16px;
-  width:330px;
-  height:clamp(500px,calc(100vh - 32px),740px);
-  background:var(--pbg);
-  -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);
-  border:1px solid var(--bdr);border-radius:12px;
-  box-shadow:0 6px 36px rgba(0,0,0,.65);
-  display:flex;flex-direction:column;
-  z-index:100;overflow:hidden;
-  transition:box-shadow .2s
-}
-#panel.drag{box-shadow:0 20px 60px rgba(0,0,0,.8);transition:none}
-#panel.mini{height:50px!important;transition:height .2s}
-
-/* panel mobile */
-@media(max-width:767px){
-  #panel{
-    position:fixed;left:0;right:0;bottom:0;top:auto;
-    width:100%;border-radius:16px 16px 0 0;
-    height:72px;max-height:none;
-    border:none;border-top:1px solid var(--bdr);
-    transition:height .32s cubic-bezier(.4,0,.2,1)
-  }
-  #panel.open{height:72vh}
-  #panel.mini{height:50px!important;transition:height .18s}
+  --ink:#1C1C1E;--ink2:#3C3C43;--ink3:#636366;--ink4:#AEAEB2;
+  --sep:#E5E5EA;--bg:#fff;--bg2:#F2F2F7;--bg3:#F5F5F7;
+  --acc:#2B7BA3;
+  --d1:#C9A227;--d2:#A0522D;--d3:#3A8C5C;--d4:#2B7BA3;
+  --r:16px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,sans-serif
 }
 
-/* drag pip mobile */
-.dh{display:none;width:34px;height:4px;background:rgba(255,255,255,.18);
-  border-radius:2px;margin:9px auto 0;flex-shrink:0}
-@media(max-width:767px){.dh{display:block}}
+/* ── VIEWS ── */
+.view{display:block}
+.view[hidden]{display:none}
 
-/* header */
-.ph{display:flex;align-items:center;gap:8px;padding:12px 14px 10px;
-  border-bottom:1px solid var(--bdr);flex-shrink:0;
-  cursor:grab;user-select:none}
-@media(max-width:767px){.ph{cursor:default;padding:6px 14px}}
-.ph-t{flex:1;min-width:0}
-.ey{font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;
-  color:var(--acc);text-transform:uppercase;margin-bottom:2px}
-@media(max-width:767px){.ey{display:none}}
-.tt{font-family:var(--serif);font-weight:400;font-size:20px;
-  line-height:1.1;color:var(--tx)}
-@media(max-width:767px){.tt{font-size:17px}}
-.tm{font-family:var(--mono);font-size:8.5px;color:var(--dim);margin-top:2px}
-@media(max-width:767px){.tm{display:none}}
-.ib{width:24px;height:24px;border-radius:5px;
-  background:rgba(255,255,255,.05);border:1px solid var(--bdr);
-  color:var(--dim);font-size:15px;line-height:1;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .15s;flex-shrink:0;font-family:var(--sans)}
-.ib:hover{background:rgba(255,255,255,.1);color:var(--tx)}
-
-/* body */
-#pb{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0}
-
-/* tabs */
-.tabs{display:flex;padding:7px 10px;
-  border-bottom:1px solid var(--bdr);flex-shrink:0;gap:2px}
-.tab{flex:1;background:none;border:none;cursor:pointer;
-  padding:6px 2px;display:flex;flex-direction:column;
-  align-items:center;gap:3px;border-radius:6px;
-  transition:background .18s;-webkit-tap-highlight-color:transparent}
-.tab:hover{background:rgba(255,255,255,.04)}
-.tab.on{background:rgba(255,255,255,.07)}
-.td{width:7px;height:7px;border-radius:50%;opacity:.38;
-  transition:opacity .18s,transform .18s}
-.tab.on .td{opacity:1;transform:scale(1.4)}
-.tl{font-family:var(--mono);font-size:8px;letter-spacing:.06em;
-  color:var(--dim);transition:color .18s}
-.tab.on .tl{color:var(--tx)}
-.tda{font-family:var(--mono);font-size:7px;color:var(--dim);opacity:.45}
-
-/* scroll */
-.ps{flex:1;overflow-y:auto;overflow-x:hidden;
+/* ── INFO VIEW ── */
+#vi{
+  background:var(--bg);
+  min-height:100vh;
+  overflow-y:auto;
   -webkit-overflow-scrolling:touch;
-  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.06) transparent;
-  min-height:0}
-.ps::-webkit-scrollbar{width:3px}
-.ps::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07)}
+  padding-top:env(safe-area-inset-top)
+}
+.page{max-width:430px;margin:0 auto;font-family:var(--font)}
 
-/* day card */
-.dc{padding:15px 16px 12px;border-bottom:1px solid var(--bdr)}
-.dct{font-family:var(--serif);font-size:20px;font-weight:400;
-  line-height:1.2;margin-bottom:2px}
-.dcs{font-family:var(--mono);font-size:7.5px;color:var(--dim);
-  letter-spacing:.04em;margin-bottom:11px;line-height:1.6}
-.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px}
-.sg4{grid-template-columns:repeat(4,1fr)}
-.si{display:flex;flex-direction:column;gap:2px}
-.sl{font-family:var(--mono);font-size:7px;letter-spacing:.1em;
-  color:var(--dim);text-transform:uppercase}
-.sv{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--tx)}
-.su{font-size:8px;font-weight:300;color:var(--dim);margin-left:1px}
-.dn{font-size:11px;line-height:1.65;color:var(--dim);font-family:var(--sans)}
+/* Header */
+.hd{padding:28px 22px 20px}
+.hd-eye{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
+.hd-title{font-family:'Playfair Display',Georgia,serif;font-size:30px;font-weight:600;color:var(--ink);line-height:1.15;margin-bottom:6px}
+.hd-sub{font-size:14px;color:var(--ink3);font-weight:400}
 
-/* elev chart */
-.ew{padding:12px 16px;border-bottom:1px solid var(--bdr)}
-.el{font-family:var(--mono);font-size:7px;letter-spacing:.1em;
-  color:var(--dim);text-transform:uppercase;margin-bottom:5px}
-#ec{width:100%;height:48px;display:block;overflow:visible}
+/* Stats strip */
+.stats-strip{display:grid;grid-template-columns:repeat(3,1fr);margin:0 22px 24px;border:1.5px solid var(--sep);border-radius:14px;overflow:hidden}
+.stat-cell{padding:14px 8px 12px;text-align:center}
+.stat-cell+.stat-cell{border-left:1.5px solid var(--sep)}
+.stat-v{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1}
+.stat-v span{font-size:12px;font-weight:500;color:var(--ink3);margin-left:2px}
+.stat-l{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink4);margin-top:4px}
 
-/* sections */
-.sec{padding:14px 16px;border-bottom:1px solid var(--bdr)}
-.sec-t{font-family:var(--mono);font-size:7.5px;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--acc);margin-bottom:9px}
-.sec-b{font-size:11px;line-height:1.7;color:var(--dim);font-family:var(--sans)}
-.sec-b p{margin-bottom:7px}
-.sec-b p:last-child{margin-bottom:0}
-.rb{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;
-  border-radius:3px;font-family:var(--mono);font-size:7px;
-  letter-spacing:.1em;text-transform:uppercase;font-weight:500;
-  margin-bottom:7px;
-  background:rgba(122,181,212,.09);color:var(--acc);
-  border:1px solid rgba(122,181,212,.2)}
-.rdot{width:5px;height:5px;border-radius:50%;background:currentColor}
-.wt{list-style:none;margin-top:7px}
-.wt li{display:flex;align-items:flex-start;gap:6px;font-size:11px;
-  color:var(--dim);line-height:1.6;margin-bottom:5px;font-family:var(--sans)}
-.wt li::before{content:'—';color:var(--acc);flex-shrink:0;margin-top:1px}
-a.src{font-family:var(--mono);font-size:7.5px;color:var(--acc);
-  opacity:.6;text-decoration:none;white-space:nowrap}
-a.src:hover{opacity:1}
+/* Route card */
+.route-card{margin:0 22px 28px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--sep)}
+.route-svg{display:block;width:100%;height:auto}
+.route-footer{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1.5px solid var(--sep);background:var(--bg)}
+.route-legend{display:flex;gap:14px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--ink3)}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.map-link{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--acc);white-space:nowrap;cursor:pointer;border:none;background:none;padding:0;font-family:var(--font)}
+.map-link:active{opacity:.7}
 
-/* camps */
-.cl{display:flex;flex-direction:column;gap:13px}
-.ci{display:flex;gap:9px;align-items:flex-start}
-.cdw{display:flex;flex-direction:column;align-items:center;padding-top:3px}
-.cd{width:9px;height:9px;border-radius:50%;border:2px solid;flex-shrink:0}
-.cln{width:1px;flex:1;min-height:14px;background:var(--bdr);margin-top:3px}
-.cn{font-family:var(--serif);font-size:14px;font-weight:400;
-  color:var(--tx);line-height:1.2}
-.cm{font-family:var(--mono);font-size:7.5px;color:var(--dim);margin-top:1px}
-.cd2{font-size:10.5px;color:var(--dim);line-height:1.55;
-  margin-top:3px;font-family:var(--sans)}
+/* Day tabs */
+.day-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 22px 20px}
+.day-tab{padding:9px 4px 8px;border-radius:10px;border:1.5px solid var(--sep);text-align:center;cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent}
+.day-tab:active{opacity:.8}
+.day-tab .dt-lbl{font-size:13px;font-weight:700;color:var(--ink3);line-height:1}
+.day-tab .dt-date{font-size:10px;color:var(--ink4);margin-top:2px;font-weight:500}
+.day-tab.on .dt-lbl{color:#fff}
+.day-tab.on .dt-date{color:rgba(255,255,255,.75)}
 
-/* overview table */
-.ovt{width:100%;border-collapse:collapse;margin-top:4px}
-.ovt td{padding:4px 0;font-size:10.5px;color:var(--dim);
-  font-family:var(--sans);border-bottom:1px solid rgba(255,255,255,.04)}
-.ovt td:first-child{font-family:var(--mono);font-size:8px;
-  padding-right:8px;white-space:nowrap}
-.ovt td.n{font-family:var(--mono);font-size:9px;color:var(--tx);
-  text-align:right;padding-left:6px;white-space:nowrap}
-.ovt tr:last-child td{border-bottom:none}
+/* Day panels */
+.day-panel[hidden]{display:none}
+.dp-head{padding:0 22px 16px}
+.dp-title{font-size:22px;font-weight:700;color:var(--ink);line-height:1.2;margin-bottom:3px}
+.dp-route{font-size:13px;color:var(--ink3);font-weight:400}
+.dp-stats{display:grid;grid-template-columns:repeat(3,1fr);padding:0 22px 20px}
+.dp-stat{text-align:center;padding:0 8px}
+.dp-stat+.dp-stat{border-left:1.5px solid var(--sep)}
+.dp-sv{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.01em;line-height:1}
+.dp-sv small{font-size:12px;font-weight:500;color:var(--ink3);margin-left:1px}
+.dp-sl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink4);margin-top:3px}
+.dp-chart{margin:0 22px 16px;height:60px;position:relative}
+.dp-chart svg{width:100%;height:100%;display:block}
+.dp-note{font-size:14px;line-height:1.7;color:var(--ink2);padding:0 22px 28px;font-weight:400}
 
-/* map buttons */
-#mc{position:fixed;left:16px;top:16px;
-  display:flex;flex-direction:column;gap:5px;z-index:50}
-.mb{background:rgba(8,10,14,.88);
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  border:1px solid var(--bdr);color:var(--dim);
-  font-family:var(--mono);font-size:8px;letter-spacing:.1em;
-  text-transform:uppercase;padding:7px 11px;border-radius:6px;
-  cursor:pointer;transition:all .18s;
-  -webkit-tap-highlight-color:transparent}
-.mb:hover,.mb:active{color:var(--tx);border-color:rgba(255,255,255,.13)}
-.mb.on{background:var(--ag);color:var(--acc);
-  border-color:rgba(122,181,212,.28)}
+/* Divider */
+.divider{height:8px;background:var(--bg2);margin:0 0 24px}
 
-/* popup */
-.maplibregl-popup-content{
-  background:rgba(8,10,14,.97)!important;
-  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
-  border:1px solid var(--bdr)!important;
-  border-radius:9px!important;padding:11px 14px!important;
-  box-shadow:0 6px 24px rgba(0,0,0,.6)!important;max-width:210px}
-.maplibregl-popup-tip{display:none!important}
-.maplibregl-popup-close-button{color:var(--dim)!important;
-  font-size:14px!important;right:7px!important;top:5px!important}
-.pn{font-family:var(--mono);font-size:8px;letter-spacing:.1em;
-  text-transform:uppercase;margin-bottom:3px}
-.pname{font-family:var(--serif);font-size:15px;color:var(--tx);
-  margin-bottom:3px;line-height:1.2}
-.pele{font-family:var(--mono);font-size:9.5px;color:var(--dim)}
+/* Sections */
+.section{padding:0 22px 28px}
+.sec-head{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:16px;padding-bottom:10px;border-bottom:1.5px solid var(--sep)}
+.sec-body{font-size:14px;line-height:1.75;color:var(--ink2)}
+.sec-body p{margin-bottom:12px}
+.sec-body p:last-child{margin-bottom:0}
 
-/* animations */
-.dc,.ew{animation:fu .22s ease}
-@keyframes fu{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+/* Risk badge */
+.risk{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+.risk.ml{background:rgba(43,123,163,.1);color:var(--acc)}
+.risk-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* Bullets */
+.bullets{list-style:none;margin-top:14px}
+.bullets li{display:flex;gap:10px;font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:8px;align-items:flex-start}
+.bullets li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--acc);flex-shrink:0;margin-top:7px}
+.src-note{font-size:11px;color:var(--ink4);margin-top:10px}
+.src-note a{color:var(--acc);text-decoration:none;font-weight:500}
+
+/* Camps */
+.camps{padding:0 22px 40px}
+.camp-list{display:flex;flex-direction:column;gap:0}
+.camp-row{display:flex;gap:14px;align-items:flex-start}
+.camp-spine{display:flex;flex-direction:column;align-items:center;padding-top:2px;flex-shrink:0}
+.camp-node{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:.02em}
+.camp-line{width:2px;flex:1;min-height:20px;background:var(--sep);margin:4px 0}
+.camp-body{flex:1;padding-bottom:22px}
+.camp-name{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px;line-height:1.2}
+.camp-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.camp-alt{font-size:12px;color:var(--ink3);font-weight:500}
+.camp-zone{font-size:11px;font-weight:600;background:var(--bg2);color:var(--ink3);padding:2px 8px;border-radius:20px}
+.camp-desc{font-size:13px;color:var(--ink3);line-height:1.6}
+
+/* ── MAP VIEW ── */
+#vm{position:fixed;inset:0}
+#map{position:absolute;inset:0}
+
+/* MapLibre overrides */
+.maplibregl-ctrl-attrib{font-size:9px!important;background:rgba(0,0,0,.45)!important;color:#aaa!important;border-radius:4px!important}
+.maplibregl-ctrl-attrib a{color:#aaa!important}
+.maplibregl-ctrl-group{background:rgba(0,0,0,.65)!important;border:none!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:10px!important;overflow:hidden}
+.maplibregl-ctrl-group button{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.1)!important}
+.maplibregl-ctrl-group button:last-child{border-bottom:none!important}
+.maplibregl-ctrl-icon{filter:invert(.9)}
+
+/* Map header */
+.map-hd{position:absolute;top:0;left:0;right:0;z-index:10;padding:max(env(safe-area-inset-top),44px) 16px 0}
+.back-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.95);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:none;border-radius:22px;padding:9px 16px 9px 12px;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;font-family:var(--font);box-shadow:0 2px 16px rgba(0,0,0,.2);-webkit-tap-highlight-color:transparent}
+.back-btn:active{opacity:.8}
+.back-arrow{font-size:18px;line-height:1;color:var(--acc)}
+
+/* Map top-right controls */
+.map-ctrls{position:absolute;top:max(env(safe-area-inset-top),44px);right:16px;z-index:10;display:flex;flex-direction:column;gap:8px}
+.map-btn{background:rgba(255,255,255,.95);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:none;border-radius:10px;padding:8px 13px;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;font-family:var(--font);box-shadow:0 2px 12px rgba(0,0,0,.18);-webkit-tap-highlight-color:transparent;letter-spacing:.01em}
+.map-btn.on{background:var(--acc);color:#fff}
+.map-btn:active{opacity:.8}
+
+/* Floating day bar */
+.day-bar{position:absolute;bottom:max(env(safe-area-inset-bottom),28px);left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:0;background:rgba(255,255,255,.95);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-radius:26px;padding:5px;box-shadow:0 4px 28px rgba(0,0,0,.28);white-space:nowrap}
+.mday-tab{background:none;border:none;padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;color:var(--ink3);cursor:pointer;font-family:var(--font);transition:all .15s;-webkit-tap-highlight-color:transparent}
+.mday-tab.on{color:#fff}
+.mday-tab:active{opacity:.75}
+
+/* Map popup */
+.maplibregl-popup-content{background:rgba(255,255,255,.97)!important;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:none!important;border-radius:12px!important;padding:12px 14px!important;box-shadow:0 4px 24px rgba(0,0,0,.2)!important;min-width:150px}
+.maplibregl-popup-tip{border-top-color:rgba(255,255,255,.97)!important}
+.maplibregl-popup-close-button{color:#aaa!important;font-size:16px!important;right:8px!important;top:6px!important}
+.pu-night{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.pu-name{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.pu-ele{font-size:12px;color:var(--ink3)}
 </style>
 </head>
 <body>
-<div id="map"></div>
 
-<div id="panel">
-  <div class="dh" id="dh"></div>
-  <div class="ph" id="ph">
-    <div class="ph-t">
-      <div class="ey">Yosemite National Park · May 2026</div>
-      <div class="tt">Hetch Hetchy Loop</div>
-      <div class="tm">32.6 mi · 7,182 ft gain · 4 days</div>
-    </div>
-    <button class="ib" id="mb" onclick="toggleMin()">−</button>
+<!-- ══════════════════════════════════════════
+     INFO VIEW
+══════════════════════════════════════════ -->
+<div id="vi" class="view">
+<div class="page">
+
+  <div class="hd">
+    <div class="hd-eye">Yosemite National Park &middot; May 2026</div>
+    <div class="hd-title">Hetch Hetchy Loop</div>
+    <div class="hd-sub">4 days &middot; 32.6 miles &middot; counterclockwise</div>
   </div>
-  <div id="pb">
-    <div class="tabs" id="tabs"></div>
-    <div class="ps">
-      <div class="dc" id="dc"></div>
-      <div class="ew">
-        <div class="el">Elevation Profile</div>
-        <svg id="ec" viewBox="0 0 300 48" preserveAspectRatio="none"></svg>
-      </div>
-      <div class="sec">
-        <div class="sec-t">Water Conditions · Day 3 Focus</div>
-        <div class="sec-b">
-          <div class="rb"><span class="rdot"></span>Moderate–Low Risk · 2026</div>
-          <p>2026 is a below-average snow year, with the Tuolumne drainage finishing the May 1 survey at just 25% of normal. Snowmelt ran early this spring, compressing what is usually a longer runoff window into a shorter pulse. As of mid-May, the Hetch Hetchy gauge is sitting right at its historical median for this time of year and trending down. <a class="src" href="https://snoflo.org/report/flow/california/tuolumne-r-nr-hetch-hetchy-ca/" target="_blank">↗ snoflo</a></p>
-          <p>Falls Creek through Jack Main Canyon is where flooding concentrates in bigger snow years. Your Day 3 route runs alongside it for roughly miles 2 through 5, at around 7,600 ft. In a normal May that section can run thigh to waist deep. This year, with snowpack well below average and a warm dry forecast through your trip, knee-depth crossings are the more realistic scenario.</p>
-          <ul class="wt">
-            <li>Cross Falls Creek before noon — snowmelt peaks in early afternoon</li>
-            <li>Poles out and hip belt unclipped before any ford</li>
-            <li>Tiltil Valley is already flooded at lower elevation; Jack Main Canyon lags behind</li>
-            <li>No precipitation forecast May 16–19; flows will keep declining</li>
-            <li>From Night 2 ridge camp you can listen for creek volume before committing to the descent</li>
-          </ul>
-        </div>
-      </div>
-      <div class="sec">
-        <div class="sec-t">Camps</div>
-        <div class="cl">
-          <div class="ci">
-            <div class="cdw"><div class="cd" style="border-color:#E8C547"></div><div class="cln"></div></div>
-            <div>
-              <div class="cn">Rancheria Falls</div>
-              <div class="cm">Night 1 · May 16 · 4,501 ft · Zone 86</div>
-              <div class="cd2">The campsite area spreads out around the base of the falls. Wander off the main path and you will find more private spots with existing fire rings tucked behind granite outcrops. It fills on weekends so arriving before 3 pm is worth it.</div>
-            </div>
-          </div>
-          <div class="ci">
-            <div class="cdw"><div class="cd" style="border-color:#b07040"></div><div class="cln"></div></div>
-            <div>
-              <div class="cn">Jack Main Canyon Ridge</div>
-              <div class="cm">Night 2 · May 17 · 8,458 ft · Zone 93</div>
-              <div class="cd2">Exposed high-bench camping with open views north into the canyon. The position is tactically useful — from the ridge you can listen for Falls Creek below and get a sense of water volume before committing to the descent in the morning.</div>
-            </div>
-          </div>
-          <div class="ci">
-            <div class="cdw"><div class="cd" style="border-color:#52C78E"></div></div>
-            <div>
-              <div class="cn">Lower Frog Creek</div>
-              <div class="cm">Night 3 · May 18 · 6,283 ft · Zone 88</div>
-              <div class="cd2">A still pool along Frog Creek serves as the water source. At 6,283 ft you are below treeline and noticeably warmer than the two previous camps. The payoff is a short 4.9 mile walk out the next morning, mostly downhill through the Beehive switchbacks to the dam.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div style="height:22px"></div>
+
+  <div class="stats-strip">
+    <div class="stat-cell">
+      <div class="stat-v">32.6<span>mi</span></div>
+      <div class="stat-l">Distance</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-v">7,182<span>ft</span></div>
+      <div class="stat-l">Elevation Gain</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-v">4</div>
+      <div class="stat-l">Days</div>
     </div>
   </div>
-</div>
 
-<div id="mc">
-  <button class="mb on" id="b3d" onclick="toggle3d()">3D Terrain</button>
-  <button class="mb on" id="bSat" onclick="toggleSat()">Satellite</button>
-  <button class="mb" id="bAll" onclick="flyAll()">Full Route</button>
+  <div class="route-card">
+    <svg viewBox="0 0 336 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"><rect width="336" height="310" fill="#F2F2F7"/><path d="M54.6,264.2 L54.2,263.0 L53.4,262.4 L53.1,261.4 L54.0,260.4 L53.4,258.1 L51.6,256.7 L50.5,252.8 L50.9,251.8 L51.6,250.8 L51.6,249.5 L52.3,248.0 L52.5,246.1 L53.4,243.6 L54.0,241.6 L54.4,240.0 L54.9,238.7 L56.3,238.0 L57.4,237.6 L58.4,236.5 L59.3,237.2 L60.1,237.4 L61.6,237.1 L61.6,236.7 L62.6,234.8 L63.3,234.3 L64.2,234.4 L64.5,234.4 L64.5,234.6 L64.1,235.1 L65.0,235.6 L65.7,235.5 L66.7,235.0 L67.7,234.9 L69.3,234.6 L70.8,234.2 L71.4,233.8 L72.4,233.0 L72.9,232.6 L73.7,232.0 L74.4,230.9 L75.6,230.4 L76.9,230.1 L77.9,229.6 L79.0,228.6 L79.8,227.3 L81.2,226.4 L82.5,226.0 L83.9,225.6 L85.2,225.2 L87.4,225.4 L87.4,225.6 L88.0,225.7 L88.6,225.3 L90.4,224.6 L91.7,224.4 L93.0,224.6 L94.5,225.2 L95.9,225.9 L96.8,226.5 L96.9,225.9 L97.6,226.4 L98.8,227.1 L101.0,227.9 L103.7,228.2 L104.8,228.4 L104.4,228.0 L104.3,227.7 L105.6,228.1 L106.5,228.2 L107.6,228.9 L109.1,230.1 L109.9,230.8 L111.7,232.8 L112.6,233.2 L113.5,233.6 L114.6,234.6 L115.6,235.3 L116.7,236.2 L118.1,237.0 L119.9,237.3 L121.5,237.6 L123.9,237.3 L125.0,237.0 L126.6,236.6 L128.9,236.4 L130.1,236.5 L131.7,236.1 L132.8,236.0 L133.3,236.2 L134.3,236.0 L133.7,236.3 L133.8,236.5 L133.6,236.9 L135.3,237.0 L136.0,236.8 L136.7,236.8 L137.3,236.7 L137.8,236.3 L138.0,236.4 L139.1,236.2 L140.0,236.1 L142.2,235.8 L143.4,235.4 L144.9,234.7 L145.8,234.8 L146.6,234.6 L148.4,234.3 L150.0,233.7 L151.0,233.3 L151.8,233.4 L152.4,233.3 L153.6,233.5 L154.5,233.8 L153.9,234.1 L154.7,234.1 L155.4,233.8 L156.4,233.2 L157.1,232.6 L157.5,232.3 L157.9,233.0 L158.3,233.0 L158.4,233.3 L158.7,234.0 L159.3,234.2 L159.9,233.8 L160.2,233.3 L160.5,233.0 L160.8,233.2 L160.9,233.2 L161.3,234.2 L161.6,234.5 L163.1,234.9 L163.8,235.3 L164.2,236.9 L164.9,237.5 L165.9,238.0 L167.0,237.6 L168.0,238.0 L169.7,238.7 L171.0,239.6 L172.5,240.0 L174.0,240.6 L174.3,241.4" fill="none" stroke="#C9A227" stroke-width="7" stroke-opacity="0.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M174.1,241.0 L174.4,239.8 L174.8,239.5 L174.6,238.5 L175.1,237.8 L176.1,238.1 L177.5,238.5 L179.2,239.1 L179.6,239.1 L179.8,238.9 L180.6,238.6 L180.4,238.0 L181.1,237.6 L181.4,237.3 L181.5,236.9 L181.9,236.4 L182.8,235.8 L182.5,235.4 L182.8,234.8 L183.4,233.9 L182.8,233.1 L182.2,232.8 L179.8,232.2 L181.7,231.6 L180.9,231.1 L181.7,230.4 L182.1,229.7 L183.2,229.0 L183.7,228.5 L183.6,228.2 L184.0,227.6 L185.1,226.5 L186.3,226.0 L187.4,225.8 L188.4,225.8 L189.3,225.1 L190.1,224.7 L191.1,223.9 L192.9,222.3 L194.4,221.1 L195.0,220.1 L196.4,218.6 L197.6,217.7 L199.2,215.9 L201.3,214.2 L202.8,213.5 L204.1,212.9 L205.2,212.3 L206.5,211.3 L208.4,210.3 L209.3,209.9 L211.0,209.2 L212.9,208.7 L215.0,207.9 L215.5,205.3 L217.2,203.9 L218.5,203.3 L221.2,202.9 L223.3,202.7 L223.2,202.3 L223.4,202.1 L223.7,201.5 L224.6,201.2 L223.8,200.7 L224.4,200.1 L224.2,199.9 L224.3,199.5 L224.0,199.1 L223.1,198.4 L222.0,197.2 L221.9,196.8 L221.2,196.4 L219.6,195.9 L217.9,195.7 L217.1,195.3 L216.9,195.2 L215.5,195.7 L214.7,195.7 L214.9,195.2 L214.7,195.1 L213.6,194.8 L213.9,192.6 L214.4,192.5 L214.9,191.9 L215.3,192.2 L216.1,192.2 L215.8,191.6 L216.8,191.0 L217.2,190.5 L217.8,190.0 L218.6,189.4 L219.6,188.6 L221.2,187.2 L220.5,187.1 L220.7,185.9 L220.5,184.3 L220.6,182.9 L221.6,180.7 L222.3,179.4 L222.5,179.2 L222.9,179.1 L223.1,178.7 L224.8,180.6 L225.5,179.2 L226.5,178.0 L227.3,176.2 L227.5,174.9 L228.7,173.9 L229.5,173.3 L230.3,171.5 L232.0,170.1 L232.1,169.6 L232.4,169.1 L233.7,168.2 L235.6,168.0 L237.2,167.3 L237.5,166.6 L238.5,165.5 L239.1,164.6 L238.7,164.3 L239.5,163.8 L240.9,163.2 L241.9,162.7 L243.6,162.4 L244.0,161.5 L245.3,160.6 L246.7,158.7 L248.9,157.9 L251.0,155.0 L252.4,154.8 L253.7,154.5 L254.8,153.0 L256.0,151.9 L257.4,149.6 L258.1,147.5 L259.8,144.4 L260.7,142.3 L261.9,139.9 L263.3,137.6 L264.0,134.7 L264.7,132.9 L265.1,130.2 L265.5,128.2 L265.4,126.0 L265.9,124.0 L266.3,121.9 L267.8,119.2 L268.4,117.6 L269.2,116.0 L270.8,114.7 L272.0,113.7 L273.1,111.4 L273.7,110.1 L274.5,109.3 L274.9,107.5 L275.6,106.2 L275.8,104.9 L274.0,105.1 L272.5,104.5 L272.0,102.9 L272.6,101.8 L274.0,100.6 L275.8,99.7 L278.1,97.5 L280.0,94.0 L280.7,92.2 L282.0,89.0 L282.2,87.3 L282.4,82.1 L284.1,78.6 L284.1,76.6 L283.4,75.1 L282.6,72.1 L282.5,70.5 L282.3,67.9 L281.8,66.0 L282.5,64.2 L283.1,63.2 L283.2,62.1 L282.6,60.8 L284.0,59.5 L285.2,58.5 L286.9,56.9 L288.0,55.2 L287.3,53.9 L286.2,52.4 L286.7,51.3 L286.3,50.6" fill="none" stroke="#A0522D" stroke-width="7" stroke-opacity="0.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M286.3,50.7 L286.4,49.9 L287.0,47.8 L286.2,46.4 L285.4,46.1 L284.5,46.2 L283.6,46.2 L282.6,46.8 L281.2,48.2 L280.0,49.3 L278.4,49.2 L277.4,50.6 L275.8,52.7 L273.9,53.8 L272.7,54.6 L271.1,56.1 L270.5,56.1 L269.1,57.1 L267.7,56.1 L267.3,55.9 L266.5,56.3 L266.2,56.5 L265.4,55.9 L264.9,56.4 L264.3,56.0 L263.4,55.1 L262.2,54.2 L260.4,55.3 L258.3,55.4 L256.4,56.3 L255.6,56.6 L256.3,55.4 L256.0,54.6 L255.7,54.2 L254.1,53.8 L254.0,53.1 L253.5,52.2 L253.2,51.0 L251.4,50.7 L251.1,49.8 L249.6,48.7 L247.9,49.3 L244.8,49.7 L241.5,51.2 L239.0,52.4 L237.2,52.8 L235.9,52.9 L234.1,52.7 L231.9,52.4 L231.0,53.9 L229.6,55.3 L229.1,55.8 L227.9,56.8 L226.9,57.9 L223.1,57.7 L222.7,57.1 L222.5,55.5 L222.4,53.7 L221.6,52.8 L221.3,51.2 L220.5,50.5 L218.8,50.3 L217.0,51.2 L215.6,52.2 L214.9,53.6 L214.7,54.6 L212.7,56.5 L211.8,56.4 L210.2,56.4 L208.4,56.4 L207.4,56.7 L206.3,57.2 L206.5,58.2 L205.7,58.2 L204.6,58.8 L203.5,58.6 L202.2,58.2 L200.0,57.7 L198.9,57.8 L197.1,58.8 L195.1,59.8 L194.4,60.9 L193.6,61.0 L191.6,62.2 L189.4,63.6 L188.0,63.9 L187.5,64.7 L187.3,65.5 L186.8,66.4 L185.4,66.9 L184.5,67.0 L183.1,68.3 L182.5,68.8 L181.5,69.6 L180.7,70.0 L179.0,70.5 L178.1,71.1 L177.1,71.3 L175.6,71.9 L173.7,72.4 L172.6,72.8 L171.8,72.0 L169.4,73.2 L168.5,74.2 L167.2,75.4 L166.6,76.5 L166.2,77.3 L165.4,77.9 L164.5,79.0 L163.8,80.1 L162.9,81.3 L160.1,83.3 L158.4,85.6 L158.0,86.4 L157.3,87.7 L156.0,89.5 L155.8,90.9 L153.6,94.2 L151.3,96.1 L149.5,98.3 L148.1,99.6 L147.1,101.2 L145.8,102.7 L143.6,104.7 L141.2,106.9 L138.1,108.4 L136.8,109.3 L135.4,110.2 L133.7,110.9 L133.3,112.2 L131.7,113.6 L129.3,114.9 L127.8,115.4 L125.2,116.2 L124.0,116.9 L122.7,118.0 L121.4,119.5 L121.4,120.7 L119.7,121.6 L118.6,122.9 L117.1,124.0 L115.3,125.6 L113.4,127.3 L111.1,129.0 L110.3,130.4 L107.3,132.6 L106.3,133.3 L104.7,134.9 L103.2,136.2 L102.8,137.6 L103.2,140.0 L102.0,142.0 L100.8,142.2 L100.1,142.9 L98.2,143.4 L96.3,144.1 L94.8,144.6 L93.3,145.3 L91.8,145.6 L90.6,146.1 L89.7,146.3 L84.6,146.7 L83.5,147.0 L81.1,148.6 L79.8,150.1 L77.8,151.4 L76.0,152.9 L75.3,154.4 L74.7,156.2 L73.3,156.7 L71.9,156.8 L70.4,157.2 L68.6,157.7 L67.8,158.7 L66.5,159.7 L65.0,161.3 L62.5,162.5 L60.4,165.1 L58.6,167.1 L56.3,169.1 L54.8,171.5 L53.8,174.4 L54.1,177.7 L54.6,179.8 L56.0,184.2 L56.4,185.9 L56.5,185.9" fill="none" stroke="#3A8C5C" stroke-width="7" stroke-opacity="0.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M56.5,186.0 L57.0,187.2 L57.4,188.8 L55.1,189.3 L53.1,191.5 L52.0,193.7 L51.1,195.4 L51.0,197.3 L51.3,198.1 L51.8,199.1 L52.0,200.2 L52.6,201.7 L53.4,203.1 L53.8,204.5 L54.8,204.6 L56.2,205.8 L56.6,205.7 L57.2,206.5 L57.3,207.5 L56.9,208.6 L57.0,208.9 L57.1,209.4 L57.0,209.7 L57.6,209.9 L57.2,210.4 L57.0,211.3 L55.8,211.2 L52.6,211.4 L51.1,211.5 L50.9,213.1 L49.8,213.6 L49.3,215.2 L48.2,216.2 L49.2,217.8 L49.5,219.4 L49.4,221.3 L49.5,223.6 L49.0,225.0 L48.3,226.1 L48.0,227.4 L48.2,228.1 L48.0,229.7 L48.3,229.5 L49.4,228.5 L50.4,227.8 L52.1,227.3 L52.8,227.0 L52.7,227.4 L51.7,228.8 L50.5,229.9 L49.6,231.3 L49.4,231.7 L50.6,230.8 L52.4,230.3 L53.2,230.5 L52.3,230.8 L51.6,231.4 L50.7,232.5 L50.3,233.3 L49.8,234.3 L49.6,235.0 L49.4,235.3 L50.0,234.7 L50.7,234.0 L51.4,233.6 L52.3,233.6 L53.5,233.3 L54.6,233.1 L55.5,232.9 L56.4,232.3 L57.4,232.0 L58.4,231.9 L59.0,231.8 L57.6,232.6 L56.1,233.5 L54.9,234.3 L54.0,235.1 L53.2,236.0 L52.8,236.6 L52.6,237.0 L51.7,238.0 L51.1,238.5 L52.0,238.3 L52.9,237.8 L53.4,237.4 L54.1,236.8 L54.6,236.6 L55.2,236.3 L56.3,236.0 L57.0,236.2 L57.9,236.1 L58.9,235.8 L59.4,236.2 L58.0,236.6 L57.3,237.8 L55.9,238.0 L54.7,238.9 L54.3,240.2 L54.0,242.0 L53.3,243.9 L52.5,246.4 L51.9,248.7 L51.5,249.7 L51.4,251.0 L50.7,251.9 L50.4,253.1 L52.6,257.2 L54.0,259.5 L53.1,261.4 L52.8,261.9" fill="none" stroke="#2F7FA8" stroke-width="7" stroke-opacity="0.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M54.6,264.2 L54.2,263.0 L53.4,262.4 L53.1,261.4 L54.0,260.4 L53.4,258.1 L51.6,256.7 L50.5,252.8 L50.9,251.8 L51.6,250.8 L51.6,249.5 L52.3,248.0 L52.5,246.1 L53.4,243.6 L54.0,241.6 L54.4,240.0 L54.9,238.7 L56.3,238.0 L57.4,237.6 L58.4,236.5 L59.3,237.2 L60.1,237.4 L61.6,237.1 L61.6,236.7 L62.6,234.8 L63.3,234.3 L64.2,234.4 L64.5,234.4 L64.5,234.6 L64.1,235.1 L65.0,235.6 L65.7,235.5 L66.7,235.0 L67.7,234.9 L69.3,234.6 L70.8,234.2 L71.4,233.8 L72.4,233.0 L72.9,232.6 L73.7,232.0 L74.4,230.9 L75.6,230.4 L76.9,230.1 L77.9,229.6 L79.0,228.6 L79.8,227.3 L81.2,226.4 L82.5,226.0 L83.9,225.6 L85.2,225.2 L87.4,225.4 L87.4,225.6 L88.0,225.7 L88.6,225.3 L90.4,224.6 L91.7,224.4 L93.0,224.6 L94.5,225.2 L95.9,225.9 L96.8,226.5 L96.9,225.9 L97.6,226.4 L98.8,227.1 L101.0,227.9 L103.7,228.2 L104.8,228.4 L104.4,228.0 L104.3,227.7 L105.6,228.1 L106.5,228.2 L107.6,228.9 L109.1,230.1 L109.9,230.8 L111.7,232.8 L112.6,233.2 L113.5,233.6 L114.6,234.6 L115.6,235.3 L116.7,236.2 L118.1,237.0 L119.9,237.3 L121.5,237.6 L123.9,237.3 L125.0,237.0 L126.6,236.6 L128.9,236.4 L130.1,236.5 L131.7,236.1 L132.8,236.0 L133.3,236.2 L134.3,236.0 L133.7,236.3 L133.8,236.5 L133.6,236.9 L135.3,237.0 L136.0,236.8 L136.7,236.8 L137.3,236.7 L137.8,236.3 L138.0,236.4 L139.1,236.2 L140.0,236.1 L142.2,235.8 L143.4,235.4 L144.9,234.7 L145.8,234.8 L146.6,234.6 L148.4,234.3 L150.0,233.7 L151.0,233.3 L151.8,233.4 L152.4,233.3 L153.6,233.5 L154.5,233.8 L153.9,234.1 L154.7,234.1 L155.4,233.8 L156.4,233.2 L157.1,232.6 L157.5,232.3 L157.9,233.0 L158.3,233.0 L158.4,233.3 L158.7,234.0 L159.3,234.2 L159.9,233.8 L160.2,233.3 L160.5,233.0 L160.8,233.2 L160.9,233.2 L161.3,234.2 L161.6,234.5 L163.1,234.9 L163.8,235.3 L164.2,236.9 L164.9,237.5 L165.9,238.0 L167.0,237.6 L168.0,238.0 L169.7,238.7 L171.0,239.6 L172.5,240.0 L174.0,240.6 L174.3,241.4" fill="none" stroke="#C9A227" stroke-width="2.5" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M174.1,241.0 L174.4,239.8 L174.8,239.5 L174.6,238.5 L175.1,237.8 L176.1,238.1 L177.5,238.5 L179.2,239.1 L179.6,239.1 L179.8,238.9 L180.6,238.6 L180.4,238.0 L181.1,237.6 L181.4,237.3 L181.5,236.9 L181.9,236.4 L182.8,235.8 L182.5,235.4 L182.8,234.8 L183.4,233.9 L182.8,233.1 L182.2,232.8 L179.8,232.2 L181.7,231.6 L180.9,231.1 L181.7,230.4 L182.1,229.7 L183.2,229.0 L183.7,228.5 L183.6,228.2 L184.0,227.6 L185.1,226.5 L186.3,226.0 L187.4,225.8 L188.4,225.8 L189.3,225.1 L190.1,224.7 L191.1,223.9 L192.9,222.3 L194.4,221.1 L195.0,220.1 L196.4,218.6 L197.6,217.7 L199.2,215.9 L201.3,214.2 L202.8,213.5 L204.1,212.9 L205.2,212.3 L206.5,211.3 L208.4,210.3 L209.3,209.9 L211.0,209.2 L212.9,208.7 L215.0,207.9 L215.5,205.3 L217.2,203.9 L218.5,203.3 L221.2,202.9 L223.3,202.7 L223.2,202.3 L223.4,202.1 L223.7,201.5 L224.6,201.2 L223.8,200.7 L224.4,200.1 L224.2,199.9 L224.3,199.5 L224.0,199.1 L223.1,198.4 L222.0,197.2 L221.9,196.8 L221.2,196.4 L219.6,195.9 L217.9,195.7 L217.1,195.3 L216.9,195.2 L215.5,195.7 L214.7,195.7 L214.9,195.2 L214.7,195.1 L213.6,194.8 L213.9,192.6 L214.4,192.5 L214.9,191.9 L215.3,192.2 L216.1,192.2 L215.8,191.6 L216.8,191.0 L217.2,190.5 L217.8,190.0 L218.6,189.4 L219.6,188.6 L221.2,187.2 L220.5,187.1 L220.7,185.9 L220.5,184.3 L220.6,182.9 L221.6,180.7 L222.3,179.4 L222.5,179.2 L222.9,179.1 L223.1,178.7 L224.8,180.6 L225.5,179.2 L226.5,178.0 L227.3,176.2 L227.5,174.9 L228.7,173.9 L229.5,173.3 L230.3,171.5 L232.0,170.1 L232.1,169.6 L232.4,169.1 L233.7,168.2 L235.6,168.0 L237.2,167.3 L237.5,166.6 L238.5,165.5 L239.1,164.6 L238.7,164.3 L239.5,163.8 L240.9,163.2 L241.9,162.7 L243.6,162.4 L244.0,161.5 L245.3,160.6 L246.7,158.7 L248.9,157.9 L251.0,155.0 L252.4,154.8 L253.7,154.5 L254.8,153.0 L256.0,151.9 L257.4,149.6 L258.1,147.5 L259.8,144.4 L260.7,142.3 L261.9,139.9 L263.3,137.6 L264.0,134.7 L264.7,132.9 L265.1,130.2 L265.5,128.2 L265.4,126.0 L265.9,124.0 L266.3,121.9 L267.8,119.2 L268.4,117.6 L269.2,116.0 L270.8,114.7 L272.0,113.7 L273.1,111.4 L273.7,110.1 L274.5,109.3 L274.9,107.5 L275.6,106.2 L275.8,104.9 L274.0,105.1 L272.5,104.5 L272.0,102.9 L272.6,101.8 L274.0,100.6 L275.8,99.7 L278.1,97.5 L280.0,94.0 L280.7,92.2 L282.0,89.0 L282.2,87.3 L282.4,82.1 L284.1,78.6 L284.1,76.6 L283.4,75.1 L282.6,72.1 L282.5,70.5 L282.3,67.9 L281.8,66.0 L282.5,64.2 L283.1,63.2 L283.2,62.1 L282.6,60.8 L284.0,59.5 L285.2,58.5 L286.9,56.9 L288.0,55.2 L287.3,53.9 L286.2,52.4 L286.7,51.3 L286.3,50.6" fill="none" stroke="#A0522D" stroke-width="2.5" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M286.3,50.7 L286.4,49.9 L287.0,47.8 L286.2,46.4 L285.4,46.1 L284.5,46.2 L283.6,46.2 L282.6,46.8 L281.2,48.2 L280.0,49.3 L278.4,49.2 L277.4,50.6 L275.8,52.7 L273.9,53.8 L272.7,54.6 L271.1,56.1 L270.5,56.1 L269.1,57.1 L267.7,56.1 L267.3,55.9 L266.5,56.3 L266.2,56.5 L265.4,55.9 L264.9,56.4 L264.3,56.0 L263.4,55.1 L262.2,54.2 L260.4,55.3 L258.3,55.4 L256.4,56.3 L255.6,56.6 L256.3,55.4 L256.0,54.6 L255.7,54.2 L254.1,53.8 L254.0,53.1 L253.5,52.2 L253.2,51.0 L251.4,50.7 L251.1,49.8 L249.6,48.7 L247.9,49.3 L244.8,49.7 L241.5,51.2 L239.0,52.4 L237.2,52.8 L235.9,52.9 L234.1,52.7 L231.9,52.4 L231.0,53.9 L229.6,55.3 L229.1,55.8 L227.9,56.8 L226.9,57.9 L223.1,57.7 L222.7,57.1 L222.5,55.5 L222.4,53.7 L221.6,52.8 L221.3,51.2 L220.5,50.5 L218.8,50.3 L217.0,51.2 L215.6,52.2 L214.9,53.6 L214.7,54.6 L212.7,56.5 L211.8,56.4 L210.2,56.4 L208.4,56.4 L207.4,56.7 L206.3,57.2 L206.5,58.2 L205.7,58.2 L204.6,58.8 L203.5,58.6 L202.2,58.2 L200.0,57.7 L198.9,57.8 L197.1,58.8 L195.1,59.8 L194.4,60.9 L193.6,61.0 L191.6,62.2 L189.4,63.6 L188.0,63.9 L187.5,64.7 L187.3,65.5 L186.8,66.4 L185.4,66.9 L184.5,67.0 L183.1,68.3 L182.5,68.8 L181.5,69.6 L180.7,70.0 L179.0,70.5 L178.1,71.1 L177.1,71.3 L175.6,71.9 L173.7,72.4 L172.6,72.8 L171.8,72.0 L169.4,73.2 L168.5,74.2 L167.2,75.4 L166.6,76.5 L166.2,77.3 L165.4,77.9 L164.5,79.0 L163.8,80.1 L162.9,81.3 L160.1,83.3 L158.4,85.6 L158.0,86.4 L157.3,87.7 L156.0,89.5 L155.8,90.9 L153.6,94.2 L151.3,96.1 L149.5,98.3 L148.1,99.6 L147.1,101.2 L145.8,102.7 L143.6,104.7 L141.2,106.9 L138.1,108.4 L136.8,109.3 L135.4,110.2 L133.7,110.9 L133.3,112.2 L131.7,113.6 L129.3,114.9 L127.8,115.4 L125.2,116.2 L124.0,116.9 L122.7,118.0 L121.4,119.5 L121.4,120.7 L119.7,121.6 L118.6,122.9 L117.1,124.0 L115.3,125.6 L113.4,127.3 L111.1,129.0 L110.3,130.4 L107.3,132.6 L106.3,133.3 L104.7,134.9 L103.2,136.2 L102.8,137.6 L103.2,140.0 L102.0,142.0 L100.8,142.2 L100.1,142.9 L98.2,143.4 L96.3,144.1 L94.8,144.6 L93.3,145.3 L91.8,145.6 L90.6,146.1 L89.7,146.3 L84.6,146.7 L83.5,147.0 L81.1,148.6 L79.8,150.1 L77.8,151.4 L76.0,152.9 L75.3,154.4 L74.7,156.2 L73.3,156.7 L71.9,156.8 L70.4,157.2 L68.6,157.7 L67.8,158.7 L66.5,159.7 L65.0,161.3 L62.5,162.5 L60.4,165.1 L58.6,167.1 L56.3,169.1 L54.8,171.5 L53.8,174.4 L54.1,177.7 L54.6,179.8 L56.0,184.2 L56.4,185.9 L56.5,185.9" fill="none" stroke="#3A8C5C" stroke-width="2.5" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M56.5,186.0 L57.0,187.2 L57.4,188.8 L55.1,189.3 L53.1,191.5 L52.0,193.7 L51.1,195.4 L51.0,197.3 L51.3,198.1 L51.8,199.1 L52.0,200.2 L52.6,201.7 L53.4,203.1 L53.8,204.5 L54.8,204.6 L56.2,205.8 L56.6,205.7 L57.2,206.5 L57.3,207.5 L56.9,208.6 L57.0,208.9 L57.1,209.4 L57.0,209.7 L57.6,209.9 L57.2,210.4 L57.0,211.3 L55.8,211.2 L52.6,211.4 L51.1,211.5 L50.9,213.1 L49.8,213.6 L49.3,215.2 L48.2,216.2 L49.2,217.8 L49.5,219.4 L49.4,221.3 L49.5,223.6 L49.0,225.0 L48.3,226.1 L48.0,227.4 L48.2,228.1 L48.0,229.7 L48.3,229.5 L49.4,228.5 L50.4,227.8 L52.1,227.3 L52.8,227.0 L52.7,227.4 L51.7,228.8 L50.5,229.9 L49.6,231.3 L49.4,231.7 L50.6,230.8 L52.4,230.3 L53.2,230.5 L52.3,230.8 L51.6,231.4 L50.7,232.5 L50.3,233.3 L49.8,234.3 L49.6,235.0 L49.4,235.3 L50.0,234.7 L50.7,234.0 L51.4,233.6 L52.3,233.6 L53.5,233.3 L54.6,233.1 L55.5,232.9 L56.4,232.3 L57.4,232.0 L58.4,231.9 L59.0,231.8 L57.6,232.6 L56.1,233.5 L54.9,234.3 L54.0,235.1 L53.2,236.0 L52.8,236.6 L52.6,237.0 L51.7,238.0 L51.1,238.5 L52.0,238.3 L52.9,237.8 L53.4,237.4 L54.1,236.8 L54.6,236.6 L55.2,236.3 L56.3,236.0 L57.0,236.2 L57.9,236.1 L58.9,235.8 L59.4,236.2 L58.0,236.6 L57.3,237.8 L55.9,238.0 L54.7,238.9 L54.3,240.2 L54.0,242.0 L53.3,243.9 L52.5,246.4 L51.9,248.7 L51.5,249.7 L51.4,251.0 L50.7,251.9 L50.4,253.1 L52.6,257.2 L54.0,259.5 L53.1,261.4 L52.8,261.9" fill="none" stroke="#2F7FA8" stroke-width="2.5" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="54.6" cy="264.2" r="3.5" fill="#8E8E93" stroke="white" stroke-width="1.5"/><circle cx="173.5" cy="241.6" r="8" fill="#C9A227" stroke="white" stroke-width="2.5"/><text x="173.5" y="244.6" text-anchor="middle" fill="white" font-size="7" font-weight="700" font-family="-apple-system,sans-serif">N1</text><circle cx="286.5" cy="50.6" r="8" fill="#A0522D" stroke="white" stroke-width="2.5"/><text x="286.5" y="53.6" text-anchor="middle" fill="white" font-size="7" font-weight="700" font-family="-apple-system,sans-serif">N2</text><circle cx="52.9" cy="184.8" r="8" fill="#3A8C5C" stroke="white" stroke-width="2.5"/><text x="52.9" y="187.8" text-anchor="middle" fill="white" font-size="7" font-weight="700" font-family="-apple-system,sans-serif">N3</text></svg>
+    <div class="route-footer">
+      <div class="route-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#C9A227"></div>D1</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#A0522D"></div>D2</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#3A8C5C"></div>D3</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#2B7BA3"></div>D4</div>
+      </div>
+      <button class="map-link" onclick="showMap()">3D Map &rarr;</button>
+    </div>
+  </div>
+
+  <div class="day-tabs" id="itabs"></div>
+
+  <!-- Day 1 -->
+  <div class="day-panel" id="dp0">
+    <div class="dp-head">
+      <div class="dp-title">Reservoir Trail</div>
+      <div class="dp-route">O&rsquo;Shaughnessy Dam &rarr; Rancheria Falls</div>
+    </div>
+    <div class="dp-stats">
+      <div class="dp-stat"><div class="dp-sv">6.1<small>mi</small></div><div class="dp-sl">Distance</div></div>
+      <div class="dp-stat"><div class="dp-sv">+1,608<small>ft</small></div><div class="dp-sl">Gain</div></div>
+      <div class="dp-stat"><div class="dp-sv" style="font-size:14px">3,971&rarr;4,501<small>ft</small></div><div class="dp-sl">Elevation</div></div>
+    </div>
+    <div class="dp-chart"><svg id="ec0" viewBox="0 0 286 60" preserveAspectRatio="none"></svg></div>
+    <div class="dp-note">The trail runs east along the Hetch Hetchy Reservoir, tracing granite cliffs above the water. The first three miles undulate above the shoreline; the trail then climbs steadily to Rancheria Falls camp. Almost entirely exposed &mdash; start before 8 am.</div>
+  </div>
+
+  <!-- Day 2 -->
+  <div class="day-panel" id="dp1" hidden>
+    <div class="dp-head">
+      <div class="dp-title">The Big Climb</div>
+      <div class="dp-route">Rancheria Falls &rarr; Jack Main Canyon Ridge</div>
+    </div>
+    <div class="dp-stats">
+      <div class="dp-stat"><div class="dp-sv">10.3<small>mi</small></div><div class="dp-sl">Distance</div></div>
+      <div class="dp-stat"><div class="dp-sv">+4,462<small>ft</small></div><div class="dp-sl">Gain</div></div>
+      <div class="dp-stat"><div class="dp-sv" style="font-size:14px">4,501&rarr;8,458<small>ft</small></div><div class="dp-sl">Elevation</div></div>
+    </div>
+    <div class="dp-chart"><svg id="ec1" viewBox="0 0 286 60" preserveAspectRatio="none"></svg></div>
+    <div class="dp-note">The crux of the trip. The trail gains 4,462 feet across 10 miles with almost no recovery terrain. The sustained push begins around mile 4 through Tiltil Valley and continues over the ridge to the Jack Main Canyon rim. A long, physical day &mdash; plan for a full 8 hours.</div>
+  </div>
+
+  <!-- Day 3 -->
+  <div class="day-panel" id="dp2" hidden>
+    <div class="dp-head">
+      <div class="dp-title">Canyon Traverse</div>
+      <div class="dp-route">Ridge &rarr; Falls Creek &rarr; Laurel Lake &rarr; Lower Frog Creek</div>
+    </div>
+    <div class="dp-stats">
+      <div class="dp-stat"><div class="dp-sv">11.3<small>mi</small></div><div class="dp-sl">Distance</div></div>
+      <div class="dp-stat"><div class="dp-sv">+948<small>ft</small></div><div class="dp-sl">Gain</div></div>
+      <div class="dp-stat"><div class="dp-sv" style="font-size:14px">8,458&rarr;6,283<small>ft</small></div><div class="dp-sl">Elevation</div></div>
+    </div>
+    <div class="dp-chart"><svg id="ec2" viewBox="0 0 286 60" preserveAspectRatio="none"></svg></div>
+    <div class="dp-note">Descend from the ridge into Jack Main Canyon, follow Falls Creek upstream through meadows to Laurel Lake, then down to Lower Frog Creek. Longest day in mileage but the least gain. The Falls Creek section at miles 2&ndash;5 is the water crossing zone &mdash; see conditions below.</div>
+  </div>
+
+  <!-- Day 4 -->
+  <div class="day-panel" id="dp3" hidden>
+    <div class="dp-head">
+      <div class="dp-title">Beehive Descent</div>
+      <div class="dp-route">Lower Frog Creek &rarr; O&rsquo;Shaughnessy Dam</div>
+    </div>
+    <div class="dp-stats">
+      <div class="dp-stat"><div class="dp-sv">4.9<small>mi</small></div><div class="dp-sl">Distance</div></div>
+      <div class="dp-stat"><div class="dp-sv">+164<small>ft</small></div><div class="dp-sl">Gain</div></div>
+      <div class="dp-stat"><div class="dp-sv" style="font-size:14px">6,283&rarr;3,854<small>ft</small></div><div class="dp-sl">Elevation</div></div>
+    </div>
+    <div class="dp-chart"><svg id="ec3" viewBox="0 0 286 60" preserveAspectRatio="none"></svg></div>
+    <div class="dp-note">A short half-day out. The Beehive switchbacks drop 2,400 feet over 4.9 miles through mixed forest back to the dam. The trail winds more than it looks on the map &mdash; allow 2.5 hours rather than 1.5.</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="sec-head">Water Conditions &middot; Day 3 Focus</div>
+    <div class="sec-body">
+      <div class="risk ml"><span class="risk-dot"></span>Moderate&ndash;Low Risk &middot; 2026</div>
+      <p>2026 is a low snow year. The Tuolumne drainage finished the May 1 survey at just 25% of normal, and snowmelt ran early this spring. By mid-May the Hetch Hetchy gauge is at its historical median and declining.</p>
+      <p>Falls Creek runs alongside your Day 3 route for miles 2 through 5 at roughly 7,600 ft. In a normal May this section runs thigh to waist deep. This year expect knee depth at most. Cross before noon when diurnal melt begins to peak.</p>
+      <ul class="bullets">
+        <li>Hip belt unclipped, poles out for any ford</li>
+        <li>Tiltil Valley is already flooded at lower elevation &mdash; Jack Main Canyon lags</li>
+        <li>No precipitation in the forecast May 16&ndash;19</li>
+        <li>From Night 2 ridge camp listen for Falls Creek to gauge volume before descending</li>
+      </ul>
+      <div class="src-note">Current flow data: <a href="https://snoflo.org/report/flow/california/tuolumne-r-nr-hetch-hetchy-ca/" target="_blank">snoflo.org</a></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="camps">
+    <div class="sec-head">Camps</div>
+    <div class="camp-list">
+      <div class="camp-row">
+        <div class="camp-spine">
+          <div class="camp-node" style="background:#C9A227">N1</div>
+          <div class="camp-line"></div>
+        </div>
+        <div class="camp-body">
+          <div class="camp-name">Rancheria Falls</div>
+          <div class="camp-meta"><span class="camp-alt">4,501 ft</span><span class="camp-zone">Zone 86</span><span class="camp-alt">May 16</span></div>
+          <div class="camp-desc">Sites spread around the base of the falls. Look behind the granite outcrops off the main trail for more private spots with existing fire rings. Fills on weekends &mdash; arrive before 3 pm.</div>
+        </div>
+      </div>
+      <div class="camp-row">
+        <div class="camp-spine">
+          <div class="camp-node" style="background:#A0522D">N2</div>
+          <div class="camp-line"></div>
+        </div>
+        <div class="camp-body">
+          <div class="camp-name">Jack Main Canyon Ridge</div>
+          <div class="camp-meta"><span class="camp-alt">8,458 ft</span><span class="camp-zone">Zone 93</span><span class="camp-alt">May 17</span></div>
+          <div class="camp-desc">Open camping at 8,458 ft with long views north into the canyon. You can hear Falls Creek below and gauge conditions before the morning descent.</div>
+        </div>
+      </div>
+      <div class="camp-row">
+        <div class="camp-spine">
+          <div class="camp-node" style="background:#3A8C5C">N3</div>
+        </div>
+        <div class="camp-body">
+          <div class="camp-name">Lower Frog Creek</div>
+          <div class="camp-meta"><span class="camp-alt">6,283 ft</span><span class="camp-zone">Zone 88</span><span class="camp-alt">May 18</span></div>
+          <div class="camp-desc">Sheltered below treeline with a pool along the creek for water. The short 4.9-mile descent the next morning is mostly downhill.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- .page -->
+</div><!-- #vi -->
+
+<!-- ══════════════════════════════════════════
+     MAP VIEW
+══════════════════════════════════════════ -->
+<div id="vm" class="view" hidden>
+  <div id="map"></div>
+  <div class="map-hd">
+    <button class="back-btn" onclick="showInfo()">
+      <span class="back-arrow">&#8249;</span> Hetch Hetchy Loop
+    </button>
+  </div>
+  <div class="map-ctrls">
+    <button class="map-btn on" id="b3d" onclick="toggle3d()">3D</button>
+  </div>
+  <div class="day-bar" id="mbar"></div>
 </div>
 
 <script>
+var DCOLS=['#C9A227','#A0522D','#3A8C5C','#2B7BA3'];
+var DNAMES=['D1','D2','D3','D4'];
+var DDATES=['May 16','May 17','May 18','May 19'];
+var ELEV=[[3971,3856,3780,3838,3821,3810,3912,3991,4061,4027,4022,4000,3961,3948,3938,3982,4007,4054,4012,3962,3969,3890,3864,3949,3922,4081,4099,4102,4164,4228,4270,4284,4297,4283,4337,4446,4449,4411,4351,4311,4301,4308,4267,4284,4243,4208,4201,4139,4122,4139,4117,4190,4266,4295,4324,4386,4433,4455,4476,4501],[4505,4561,4601,4683,4805,4916,5078,5250,5424,5497,5558,5558,5652,5758,5770,5751,5721,5581,5603,5679,5796,5876,5995,6099,6183,6266,6407,6504,6682,6881,6897,7000,7095,7167,7305,7490,7572,7716,7780,7827,7860,7930,7996,8067,8079,8088,8107,8118,8185,8307,8380,8516,8521,8619,8578,8545,8577,8635,8526,8458],[8462,8390,8228,8117,8041,8001,7900,7833,7768,7788,7711,7700,7680,7676,7674,7674,7714,7654,7686,7680,7677,7662,7677,7662,7621,7609,7631,7581,7508,7464,7484,7695,7771,7913,8039,8124,8017,7917,7823,7760,7652,7530,7419,7306,7263,7205,7210,7084,6978,6960,6884,6756,6683,6588,6558,6552,6517,6468,6368,6283],[6283,6276,6217,6092,6045,6025,5967,5917,5833,5766,5742,5725,5685,5653,5636,5578,5518,5446,5394,5321,5268,5179,5152,5104,5071,5031,4971,4926,4878,4847,4788,4745,4711,4668,4660,4602,4560,4539,4551,4492,4442,4367,4326,4282,4250,4222,4195,4161,4142,4098,4069,4019,3957,3892,3812,3822,3810,3831,3764,3854]];
 var ROUTE=[[[-119.78719,37.94476,1210],[-119.78742,37.94536,1204],[-119.78789,37.94561,1188],[-119.78808,37.94612,1173],[-119.78754,37.94658,1163],[-119.78789,37.94769,1121],[-119.78896,37.94836,1158],[-119.78968,37.95019,1167],[-119.78944,37.95067,1162],[-119.78901,37.95115,1160],[-119.78899,37.95178,1166],[-119.78859,37.95246,1160],[-119.78846,37.95339,1161],[-119.78789,37.95459,1162],[-119.78756,37.95551,1169],[-119.78727,37.9563,1193],[-119.78697,37.95692,1206],[-119.78613,37.95725,1214],[-119.7855,37.95744,1225],[-119.78486,37.95793,1234],[-119.78436,37.95763,1233],[-119.78384,37.95753,1232],[-119.78295,37.95764,1226],[-119.78293,37.95785,1228],[-119.78233,37.95874,1228],[-119.7819,37.95899,1223],[-119.7814,37.95896,1219],[-119.78121,37.95895,1217],[-119.7812,37.95885,1215],[-119.78144,37.95859,1207],[-119.78088,37.95835,1204],[-119.78047,37.95842,1204],[-119.77989,37.95864,1206],[-119.77926,37.95871,1201],[-119.77829,37.95883,1200],[-119.77738,37.95904,1207],[-119.77702,37.95924,1213],[-119.77645,37.95962,1223],[-119.77612,37.95978,1223],[-119.77568,37.9601,1220],[-119.77526,37.96062,1231],[-119.7745,37.96086,1236],[-119.77371,37.96098,1229],[-119.77315,37.96123,1225],[-119.77248,37.96169,1215],[-119.77197,37.96233,1208],[-119.77112,37.96273,1208],[-119.77033,37.96292,1213],[-119.76953,37.96311,1211],[-119.76869,37.96333,1219],[-119.76741,37.96324,1194],[-119.76738,37.96314,1186],[-119.76705,37.9631,1174],[-119.76668,37.96328,1178],[-119.7656,37.96361,1186],[-119.7648,37.96368,1194],[-119.76404,37.96359,1203],[-119.76309,37.9633,1195],[-119.76224,37.96298,1195],[-119.76171,37.9627,1223],[-119.76167,37.96299,1242],[-119.76125,37.96275,1252],[-119.76052,37.9624,1253],[-119.75917,37.96203,1255],[-119.75755,37.96188,1239],[-119.75692,37.96181,1247],[-119.75714,37.96198,1259],[-119.75722,37.96212,1273],[-119.7564,37.96195,1275],[-119.75586,37.96187,1283],[-119.75521,37.96157,1289],[-119.75431,37.96099,1305],[-119.75381,37.96067,1309],[-119.75275,37.95972,1303],[-119.75216,37.95953,1314],[-119.75167,37.95934,1308],[-119.75101,37.95884,1315],[-119.7504,37.9585,1315],[-119.74973,37.95809,1311],[-119.74889,37.95773,1309],[-119.74781,37.95758,1309],[-119.7468,37.95742,1308],[-119.74537,37.95758,1322],[-119.74473,37.95772,1333],[-119.74372,37.95791,1352],[-119.74238,37.95798,1364],[-119.74163,37.95796,1359],[-119.74068,37.95812,1356],[-119.73999,37.95816,1349],[-119.73972,37.95807,1335],[-119.73907,37.9582,1347],[-119.73945,37.95802,1331],[-119.73939,37.95796,1327],[-119.73952,37.95777,1315],[-119.73852,37.95773,1312],[-119.7381,37.95781,1315],[-119.73763,37.95782,1311],[-119.73726,37.95785,1307],[-119.737,37.95803,1318],[-119.73686,37.95798,1313],[-119.73622,37.95807,1313],[-119.73565,37.95812,1309],[-119.73432,37.95826,1300],[-119.73361,37.95847,1305],[-119.73271,37.95879,1303],[-119.73215,37.95876,1292],[-119.73165,37.95885,1292],[-119.73056,37.95898,1282],[-119.72961,37.95929,1279],[-119.729,37.95946,1281],[-119.72853,37.95942,1278],[-119.72815,37.95949,1280],[-119.72745,37.95937,1273],[-119.72691,37.95924,1264],[-119.72725,37.95907,1258],[-119.72676,37.95911,1258],[-119.72638,37.95921,1257],[-119.72574,37.9595,1255],[-119.72535,37.95981,1257],[-119.72507,37.95993,1256],[-119.72484,37.95963,1243],[-119.72464,37.95962,1256],[-119.72457,37.95949,1263],[-119.7244,37.95915,1277],[-119.72402,37.95905,1289],[-119.72366,37.95924,1297],[-119.7235,37.95948,1300],[-119.72326,37.95959,1303],[-119.7231,37.9595,1309],[-119.72305,37.9595,1311],[-119.72279,37.95906,1318],[-119.72264,37.95889,1319],[-119.72173,37.95871,1332],[-119.72129,37.9585,1337],[-119.72105,37.95774,1343],[-119.72065,37.95747,1351],[-119.72006,37.95723,1352],[-119.71934,37.9574,1358],[-119.71874,37.95722,1355],[-119.71775,37.95691,1364],[-119.71693,37.95649,1364],[-119.71607,37.95627,1368],[-119.71515,37.95601,1374],[-119.71499,37.95563,1372]],[[-119.71509,37.95579,1373],[-119.71493,37.95636,1378],[-119.71465,37.95652,1380],[-119.71478,37.957,1389],[-119.71447,37.95735,1399],[-119.7139,37.95718,1399],[-119.71304,37.957,1401],[-119.71202,37.95669,1411],[-119.71175,37.95671,1416],[-119.71162,37.95681,1422],[-119.71117,37.95697,1434],[-119.71128,37.95723,1448],[-119.71086,37.95741,1459],[-119.71068,37.95756,1467],[-119.71062,37.95776,1478],[-119.71036,37.95799,1488],[-119.70985,37.9583,1500],[-119.71002,37.95848,1510],[-119.70982,37.95876,1526],[-119.70945,37.95916,1548],[-119.70982,37.95954,1571],[-119.71017,37.95972,1585],[-119.71166,37.96,1598],[-119.71049,37.96026,1612],[-119.71097,37.96051,1623],[-119.71049,37.96083,1640],[-119.71027,37.96116,1658],[-119.70959,37.9615,1668],[-119.70932,37.96173,1673],[-119.70933,37.96188,1678],[-119.70912,37.96219,1684],[-119.70847,37.9627,1691],[-119.70774,37.96293,1694],[-119.70709,37.96302,1696],[-119.70643,37.96304,1691],[-119.7059,37.96338,1697],[-119.70546,37.96357,1698],[-119.70483,37.96393,1710],[-119.70377,37.96471,1723],[-119.70284,37.96529,1731],[-119.7025,37.96575,1740],[-119.70163,37.96644,1753],[-119.70093,37.96687,1756],[-119.69994,37.96776,1765],[-119.69868,37.96855,1764],[-119.69777,37.96886,1755],[-119.697,37.96915,1753],[-119.69631,37.96946,1754],[-119.69552,37.96994,1754],[-119.69437,37.97042,1755],[-119.69383,37.97058,1751],[-119.69284,37.97094,1740],[-119.69165,37.97117,1717],[-119.69039,37.97154,1705],[-119.69009,37.97278,1701],[-119.68906,37.97346,1701],[-119.68831,37.97373,1702],[-119.68665,37.97394,1708],[-119.68541,37.97402,1720],[-119.68544,37.9742,1727],[-119.68536,37.9743,1730],[-119.68518,37.97457,1743],[-119.68463,37.97475,1755],[-119.68509,37.97496,1762],[-119.68472,37.97525,1772],[-119.68487,37.97534,1777],[-119.68481,37.97552,1786],[-119.68496,37.97575,1796],[-119.68553,37.97604,1804],[-119.68617,37.97662,1820],[-119.68625,37.97681,1827],[-119.68664,37.97702,1837],[-119.68765,37.97727,1852],[-119.68867,37.97732,1865],[-119.68912,37.97752,1877],[-119.68926,37.9776,1881],[-119.69012,37.97734,1885],[-119.69059,37.97735,1894],[-119.69047,37.97758,1903],[-119.69057,37.97764,1908],[-119.69127,37.97778,1923],[-119.69107,37.9788,1931],[-119.69077,37.97885,1947],[-119.6905,37.97913,1962],[-119.69022,37.97902,1972],[-119.68974,37.97902,1978],[-119.68993,37.97928,1987],[-119.68933,37.97957,2010],[-119.68911,37.97982,2024],[-119.68875,37.98003,2039],[-119.68822,37.98032,2056],[-119.68763,37.98073,2073],[-119.68665,37.98139,2097],[-119.68711,37.98143,2089],[-119.68698,37.982,2096],[-119.6871,37.98278,2102],[-119.68706,37.98345,2106],[-119.68643,37.98446,2119],[-119.686,37.98509,2132],[-119.68591,37.9852,2136],[-119.68565,37.98523,2146],[-119.6855,37.98542,2153],[-119.68447,37.98454,2163],[-119.68408,37.98518,2175],[-119.68349,37.98574,2179],[-119.68298,37.98663,2192],[-119.68286,37.98724,2208],[-119.68215,37.98771,2221],[-119.68169,37.98799,2228],[-119.68119,37.98884,2251],[-119.68014,37.9895,2274],[-119.68008,37.98976,2283],[-119.67992,37.98999,2293],[-119.6791,37.99041,2308],[-119.67798,37.99049,2307],[-119.67704,37.99084,2318],[-119.67684,37.99117,2331],[-119.67624,37.99169,2345],[-119.67588,37.99214,2362],[-119.67611,37.99227,2367],[-119.67563,37.99251,2373],[-119.67478,37.99279,2374],[-119.67418,37.99303,2379],[-119.67316,37.99317,2381],[-119.67289,37.99361,2388],[-119.67212,37.99403,2393],[-119.67126,37.99492,2399],[-119.66995,37.9953,2396],[-119.66869,37.99668,2403],[-119.66782,37.99681,2412],[-119.66709,37.99695,2417],[-119.66642,37.99766,2425],[-119.66565,37.99816,2432],[-119.66484,37.99928,2435],[-119.6644,38.00028,2439],[-119.66338,38.00172,2454],[-119.66282,38.00274,2456],[-119.6621,38.00388,2461],[-119.6613,38.00497,2462],[-119.66086,38.00636,2461],[-119.66045,38.00718,2462],[-119.66016,38.0085,2463],[-119.65995,38.00943,2463],[-119.66002,38.01046,2469],[-119.65971,38.01142,2468],[-119.65946,38.01245,2470],[-119.65854,38.01372,2471],[-119.65821,38.01445,2474],[-119.65773,38.01524,2473],[-119.65672,38.01586,2474],[-119.65605,38.01633,2478],[-119.65533,38.0174,2486],[-119.65501,38.01803,2495],[-119.65452,38.01844,2497],[-119.65425,38.01926,2516],[-119.65386,38.01991,2529],[-119.65371,38.02053,2543],[-119.65481,38.02041,2546],[-119.65572,38.0207,2551],[-119.65604,38.02145,2559],[-119.65567,38.02198,2563],[-119.65479,38.02257,2583],[-119.65372,38.023,2596],[-119.65237,38.02403,2594],[-119.65121,38.02567,2597],[-119.65077,38.02655,2598],[-119.64999,38.02806,2603],[-119.64987,38.02888,2608],[-119.64976,38.03136,2627],[-119.64872,38.033,2629],[-119.6487,38.03395,2624],[-119.64915,38.0347,2619],[-119.64963,38.03609,2607],[-119.64966,38.03686,2606],[-119.64981,38.03808,2604],[-119.65011,38.03901,2604],[-119.6497,38.03987,2608],[-119.64935,38.04036,2615],[-119.64925,38.04085,2622],[-119.64965,38.04146,2629],[-119.64879,38.0421,2633],[-119.64808,38.04255,2632],[-119.64706,38.04335,2626],[-119.64637,38.04412,2597],[-119.64681,38.04477,2602],[-119.64748,38.04545,2596],[-119.64715,38.04599,2586],[-119.64738,38.04633,2578]],[[-119.64741,38.04629,2579],[-119.64733,38.04667,2570],[-119.64695,38.04768,2560],[-119.64746,38.0483,2562],[-119.64795,38.04846,2547],[-119.64848,38.04844,2524],[-119.64905,38.0484,2510],[-119.64965,38.04815,2504],[-119.65045,38.04747,2497],[-119.65117,38.04694,2482],[-119.65217,38.04697,2478],[-119.65277,38.04633,2461],[-119.65371,38.04533,2451],[-119.65487,38.04482,2450],[-119.65563,38.04443,2451],[-119.65657,38.04372,2441],[-119.6569,38.0437,2441],[-119.65776,38.04326,2424],[-119.65861,38.0437,2412],[-119.65888,38.0438,2405],[-119.65933,38.04364,2398],[-119.65951,38.04353,2394],[-119.66003,38.04381,2388],[-119.66033,38.04359,2381],[-119.66068,38.04374,2374],[-119.66119,38.04419,2370],[-119.66195,38.0446,2367],[-119.66303,38.04411,2368],[-119.66431,38.04403,2375],[-119.66544,38.04362,2359],[-119.66594,38.04347,2355],[-119.66547,38.04405,2352],[-119.66565,38.04444,2352],[-119.66586,38.04463,2353],[-119.66684,38.0448,2355],[-119.66688,38.04515,2343],[-119.66721,38.04556,2342],[-119.66734,38.04614,2342],[-119.66847,38.0463,2340],[-119.66866,38.04671,2339],[-119.66955,38.04721,2341],[-119.67056,38.04693,2341],[-119.67245,38.04676,2341],[-119.67445,38.04604,2341],[-119.67594,38.04547,2339],[-119.67702,38.04529,2341],[-119.67778,38.04522,2339],[-119.6789,38.04533,2339],[-119.68024,38.04545,2350],[-119.68076,38.04476,2359],[-119.6816,38.04411,2352],[-119.68193,38.04385,2341],[-119.68265,38.0434,2335],[-119.68324,38.04286,2334],[-119.68553,38.04294,2334],[-119.68579,38.04324,2336],[-119.68589,38.04399,2342],[-119.68595,38.04486,2343],[-119.6864,38.04527,2342],[-119.68662,38.04602,2340],[-119.68712,38.04636,2341],[-119.68813,38.04646,2342],[-119.68921,38.04603,2341],[-119.69006,38.04557,2340],[-119.69045,38.04489,2340],[-119.69058,38.04441,2339],[-119.6918,38.0435,2335],[-119.69234,38.04355,2331],[-119.69328,38.04359,2330],[-119.69439,38.04356,2340],[-119.69498,38.04344,2341],[-119.69566,38.04319,2347],[-119.69552,38.04272,2336],[-119.69605,38.04272,2342],[-119.6967,38.04245,2329],[-119.69733,38.04251,2323],[-119.69812,38.0427,2319],[-119.69945,38.04297,2313],[-119.70015,38.04288,2320],[-119.70123,38.04242,2327],[-119.70244,38.04193,2329],[-119.70281,38.04144,2326],[-119.70334,38.04138,2324],[-119.70454,38.04082,2304],[-119.70586,38.04017,2307],[-119.70671,38.04002,2310],[-119.70703,38.03964,2293],[-119.70714,38.03926,2292],[-119.70744,38.03882,2288],[-119.70826,38.03858,2287],[-119.70882,38.03852,2288],[-119.70964,38.03789,2275],[-119.71003,38.03768,2275],[-119.71061,38.03731,2275],[-119.71109,38.03712,2278],[-119.71213,38.03685,2304],[-119.71266,38.03659,2330],[-119.71325,38.03648,2343],[-119.71419,38.03621,2357],[-119.7153,38.03597,2361],[-119.716,38.03578,2369],[-119.71646,38.03613,2372],[-119.7179,38.03559,2390],[-119.71848,38.03512,2404],[-119.71927,38.03452,2424],[-119.71963,38.034,2435],[-119.71987,38.03361,2443],[-119.72035,38.03336,2451],[-119.7209,38.03281,2464],[-119.72127,38.03228,2475],[-119.72186,38.03172,2476],[-119.72351,38.03076,2465],[-119.72454,38.02969,2450],[-119.72478,38.02933,2443],[-119.7252,38.02869,2436],[-119.72598,38.02783,2425],[-119.72614,38.02718,2416],[-119.72745,38.02559,2404],[-119.72882,38.0247,2397],[-119.7299,38.02367,2386],[-119.73076,38.02304,2377],[-119.7314,38.02229,2373],[-119.73214,38.02154,2368],[-119.73347,38.02062,2358],[-119.73496,38.01956,2348],[-119.7368,38.01885,2334],[-119.7376,38.01842,2326],[-119.73846,38.01799,2318],[-119.73946,38.01764,2301],[-119.73971,38.01705,2296],[-119.74066,38.01637,2286],[-119.74211,38.01577,2266],[-119.74301,38.01552,2259],[-119.74458,38.01515,2248],[-119.7453,38.0148,2234],[-119.74612,38.01426,2227],[-119.74686,38.01357,2223],[-119.74687,38.01301,2223],[-119.74793,38.01259,2215],[-119.74855,38.01196,2209],[-119.74945,38.01145,2205],[-119.75055,38.01065,2198],[-119.75173,38.00985,2203],[-119.75309,38.00906,2210],[-119.7536,38.0084,2209],[-119.7554,38.00733,2185],[-119.75601,38.00701,2175],[-119.75698,38.00625,2164],[-119.75784,38.00563,2157],[-119.75808,38.00496,2150],[-119.75783,38.00381,2136],[-119.75857,38.00285,2123],[-119.75929,38.00276,2122],[-119.75973,38.00243,2121],[-119.76089,38.00222,2121],[-119.76201,38.00189,2115],[-119.76292,38.00164,2114],[-119.76386,38.00129,2098],[-119.76476,38.00114,2085],[-119.76546,38.00091,2070],[-119.76599,38.00085,2059],[-119.76906,38.00066,2046],[-119.76972,38.0005,2044],[-119.77122,37.99974,2037],[-119.77199,37.99901,2029],[-119.77317,37.99841,2018],[-119.77425,37.99769,2010],[-119.77472,37.997,2005],[-119.77504,37.99614,2001],[-119.7759,37.99588,1999],[-119.77673,37.99584,1998],[-119.77767,37.99567,1998],[-119.77872,37.99539,1997],[-119.77923,37.99493,1996],[-119.78001,37.99447,1990],[-119.78093,37.99372,1987],[-119.78244,37.99315,1986],[-119.78366,37.99187,1973],[-119.78477,37.99094,1969],[-119.78617,37.98999,1971],[-119.78708,37.98883,1962],[-119.78769,37.98745,1951],[-119.7875,37.98591,1941],[-119.78718,37.98488,1934],[-119.78633,37.98283,1914],[-119.78608,37.98202,1915],[-119.78605,37.98199,1915]],[[-119.78603,37.98197,1915],[-119.78574,37.9814,1914],[-119.78549,37.98061,1914],[-119.78685,37.98039,1914],[-119.78808,37.97933,1884],[-119.78872,37.9783,1859],[-119.78926,37.97748,1852],[-119.78936,37.97657,1844],[-119.78919,37.97622,1841],[-119.78887,37.97571,1839],[-119.78872,37.97522,1831],[-119.78837,37.97449,1819],[-119.78793,37.97384,1811],[-119.78764,37.97314,1801],[-119.78708,37.97309,1793],[-119.78624,37.97255,1769],[-119.78599,37.9726,1764],[-119.78561,37.97219,1756],[-119.78553,37.97171,1751],[-119.78582,37.97123,1750],[-119.78574,37.97109,1748],[-119.78569,37.97083,1738],[-119.78572,37.97069,1733],[-119.78538,37.97057,1725],[-119.78558,37.97036,1723],[-119.78575,37.96991,1717],[-119.78645,37.96998,1717],[-119.78836,37.9699,1704],[-119.78928,37.96983,1696],[-119.78943,37.96908,1685],[-119.79007,37.96884,1676],[-119.79039,37.96808,1662],[-119.79103,37.96758,1648],[-119.79045,37.96684,1645],[-119.79023,37.96606,1636],[-119.79029,37.96516,1622],[-119.79026,37.96409,1615],[-119.79056,37.9634,1605],[-119.79096,37.9629,1590],[-119.79114,37.96229,1577],[-119.79101,37.96192,1573],[-119.79116,37.96116,1567],[-119.79099,37.96127,1562],[-119.79033,37.96177,1547],[-119.78969,37.9621,1548],[-119.78866,37.9623,1530],[-119.78826,37.96247,1534],[-119.78832,37.96227,1525],[-119.7889,37.9616,1515],[-119.78964,37.96109,1506],[-119.79018,37.9604,1495],[-119.79029,37.96023,1492],[-119.78959,37.96064,1478],[-119.7885,37.96087,1478],[-119.78801,37.96079,1475],[-119.78858,37.96066,1466],[-119.78899,37.96038,1450],[-119.78952,37.95983,1446],[-119.78975,37.95946,1435],[-119.79007,37.95898,1436],[-119.7902,37.95867,1425],[-119.79031,37.95854,1422],[-119.78995,37.9588,1424],[-119.78956,37.95914,1414],[-119.78911,37.95932,1412],[-119.78857,37.95933,1402],[-119.78784,37.95949,1390],[-119.78718,37.95957,1386],[-119.78664,37.95967,1382],[-119.78612,37.95992,1390],[-119.7855,37.96007,1387],[-119.78487,37.96013,1375],[-119.78453,37.96016,1367],[-119.78534,37.9598,1354],[-119.78628,37.95935,1345],[-119.78701,37.95897,1335],[-119.78752,37.95862,1330],[-119.78801,37.95817,1318],[-119.78825,37.95792,1312],[-119.78836,37.95769,1306],[-119.78894,37.95721,1303],[-119.78928,37.95699,1295],[-119.78876,37.95709,1293],[-119.7882,37.95732,1285],[-119.78789,37.95751,1278],[-119.7875,37.95778,1275],[-119.78717,37.95791,1271],[-119.78679,37.95803,1267],[-119.78615,37.95819,1266],[-119.78575,37.95807,1256],[-119.78517,37.95813,1250],[-119.78456,37.95827,1247],[-119.78427,37.95807,1240],[-119.78514,37.9579,1235],[-119.78553,37.95732,1222],[-119.78642,37.95724,1217],[-119.78712,37.9568,1201],[-119.78734,37.95621,1192],[-119.78754,37.95535,1174],[-119.78799,37.95442,1162],[-119.78844,37.95326,1160],[-119.78883,37.95215,1165],[-119.78904,37.95169,1166],[-119.78911,37.95106,1161],[-119.78954,37.95062,1164],[-119.78971,37.95007,1168],[-119.78838,37.94811,1138],[-119.78756,37.947,1149],[-119.78808,37.94612,1173],[-119.78827,37.94586,1175]]];
 
-var WP=[
-  {name:"O'Shaughnessy Dam",label:"Trailhead",night:0,ele:3971,color:"#777",lon:-119.78719,lat:37.94476},
-  {name:"Rancheria Falls",label:"Night 1 · Zone 86",night:1,ele:4501,color:"#E8C547",lon:-119.71543,lat:37.95552},
-  {name:"Jack Main Canyon Ridge",label:"Night 2 · Zone 93",night:2,ele:8458,color:"#b07040",lon:-119.64730,lat:38.04635},
-  {name:"Lower Frog Creek",label:"Night 3 · Zone 88",night:3,ele:6283,color:"#52C78E",lon:-119.78820,lat:37.98251}
+var WP_MAP=[
+  {name:"O’Shaughnessy Dam",label:"Trailhead",night:0,ele:3971,col:"#8E8E93",lon:-119.78719,lat:37.94476},
+  {name:"Rancheria Falls",label:"Night 1 · Zone 86",night:1,ele:4501,col:"#C9A227",lon:-119.71543,lat:37.95552},
+  {name:"Jack Main Canyon Ridge",label:"Night 2 · Zone 93",night:2,ele:8458,col:"#A0522D",lon:-119.64730,lat:38.04635},
+  {name:"Lower Frog Creek",label:"Night 3 · Zone 88",night:3,ele:6283,col:"#3A8C5C",lon:-119.78820,lat:37.98251}
 ];
 
-var DAYS=[
-  {lbl:"D1",date:"May 16",color:"#E8C547",
-   title:"Reservoir Trail",
-   sub:"O’Shaughnessy Dam → Rancheria Falls",
-   dist:"6.1",gain:"1,608",se:"3,971",ee:"4,501",
-   note:"Undulating cliff trail along the Hetch Hetchy Reservoir. Mostly flat for the first 3 miles then pushes steadily up for the final 2 miles to the falls camp. Exposed to sun for most of the day so start early.",
-   cam:{center:[-119.748,37.956],zoom:12.5,pitch:50,bearing:85}},
-  {lbl:"D2",date:"May 17",color:"#b07040",
-   title:"The Big Climb",
-   sub:"Rancheria Falls → Jack Main Canyon Ridge",
-   dist:"10.3",gain:"4,462",se:"4,501",ee:"8,458",
-   note:"The hardest day by a significant margin. Nearly 4,500 feet of gain spread across 10 miles with no real flat sections to recover on. The climb from around mile 4 to mile 8 is sustained and relentless. Eat well the night before and leave camp early.",
-   cam:{center:[-119.668,37.990],zoom:11,pitch:56,bearing:-12}},
-  {lbl:"D3",date:"May 18",color:"#52C78E",
-   title:"Canyon Traverse",
-   sub:"Ridge → Falls Creek → Laurel Lake → Lower Frog Creek",
-   dist:"11.3",gain:"948",se:"8,458",ee:"6,283",
-   note:"Descend from the ridge into Jack Main Canyon then follow Falls Creek upstream past Laurel Lake to camp at Lower Frog Creek. The water crossing zone runs through miles 2 to 5 at roughly 7,600 ft. Aim to be through it before noon. Longest day on paper but gentler terrain after the morning descent.",
-   cam:{center:[-119.710,38.018],zoom:11,pitch:50,bearing:8}},
-  {lbl:"D4",date:"May 19",color:"#7ab5d4",
-   title:"Beehive Descent",
-   sub:"Lower Frog Creek → O’Shaughnessy Dam",
-   dist:"4.9",gain:"164",se:"6,283",ee:"3,854",
-   note:"The short exit day. About 4.9 miles mostly downhill through the Beehive switchbacks back to the dam. It winds more than it looks on the map so plan for roughly 2.5 hours rather than 1.5.",
-   cam:{center:[-119.786,37.968],zoom:12.5,pitch:46,bearing:-165}}
-];
-
-var OV={center:[-119.716,37.998],zoom:10.4,pitch:50,bearing:-10};
-var is3d=true, isSat=true;
-
-var map=new maplibregl.Map({
-  container:"map",
-  style:{version:8,sources:{},layers:[]},
-  center:OV.center,zoom:OV.zoom,pitch:OV.pitch,bearing:OV.bearing,
-  antialias:true,attributionControl:false
-});
-map.addControl(new maplibregl.AttributionControl({compact:true}),"bottom-right");
-map.addControl(new maplibregl.NavigationControl(),"bottom-left");
-
-map.on("load",function(){
-  /* CartoDB dark — always reliable, no key needed */
-  map.addSource("dark",{
-    type:"raster",
-    tiles:[
-      "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-      "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-      "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-    ],
-    tileSize:256,
-    attribution:"© OpenStreetMap contributors © CARTO",
-    maxzoom:19
+// ── INFO PAGE ──────────────────────────────────────────
+(function(){
+  // Build info day tabs
+  var tabs=document.getElementById('itabs');
+  DNAMES.forEach(function(n,i){
+    var b=document.createElement('button');
+    b.className='day-tab'+(i===0?' on':'');
+    b.style.setProperty('--dc',DCOLS[i]);
+    b.innerHTML='<div class="dt-lbl">'+n+'</div><div class="dt-date">'+DDATES[i]+'</div>';
+    if(i===0) b.style.background=DCOLS[0];
+    b.addEventListener('click',function(){switchDay(i);});
+    tabs.appendChild(b);
   });
-  map.addLayer({id:"dark",type:"raster",source:"dark"});
 
-  /* ESRI satellite overlay — graceful fallback if blocked */
-  map.addSource("sat",{
-    type:"raster",
-    tiles:["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-    tileSize:256,attribution:"© Esri, Maxar",maxzoom:18
-  });
-  map.addLayer({id:"sat",type:"raster",source:"sat",
-    paint:{"raster-opacity":0.92}});
-
-  /* ESRI reference labels */
-  map.addSource("lbl",{
-    type:"raster",
-    tiles:["https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"],
-    tileSize:256,maxzoom:18
-  });
-  map.addLayer({id:"lbl",type:"raster",source:"lbl",
-    paint:{"raster-opacity":0.75}});
-
-  /* 3D terrain */
-  try{
-    map.addSource("dem",{
-      type:"raster-dem",
-      tiles:["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
-      encoding:"terrarium",tileSize:256,maxzoom:14
+  function switchDay(i){
+    document.querySelectorAll('.day-panel').forEach(function(p,j){p.hidden=j!==i;});
+    document.querySelectorAll('.day-tab').forEach(function(t,j){
+      t.classList.toggle('on',j===i);
+      t.style.background=j===i?DCOLS[j]:'';
+      t.style.borderColor=j===i?DCOLS[j]:'';
     });
-    map.setTerrain({source:"dem",exaggeration:1.5});
-  }catch(e){console.warn("Terrain:",e);}
+  }
 
-  /* Routes */
-  ROUTE.forEach(function(coords,i){
-    var geojson={type:"Feature",geometry:{
-      type:"LineString",
-      coordinates:coords.map(function(c){return[c[0],c[1],c[2]]})
-    }};
-    map.addSource("r"+i,{type:"geojson",data:geojson});
-    map.addLayer({id:"rg"+i,type:"line",source:"r"+i,
-      layout:{"line-join":"round","line-cap":"round"},
-      paint:{"line-color":DAYS[i].color,"line-width":8,
-        "line-opacity":0.12,"line-blur":4}});
-    map.addLayer({id:"rl"+i,type:"line",source:"r"+i,
-      layout:{"line-join":"round","line-cap":"round"},
-      paint:{"line-color":DAYS[i].color,
-        "line-width":["interpolate",["linear"],["zoom"],8,2,14,4.5],
-        "line-opacity":0.9}});
+  // Draw mini elevation charts
+  function drawChart(svgId,eles,color){
+    var svg=document.getElementById(svgId);
+    if(!svg)return;
+    var W=286,H=60,P=3,N=eles.length;
+    var mn=Math.min.apply(null,eles),mx=Math.max.apply(null,eles),rng=mx-mn||1;
+    var xs=eles.map(function(_,i){return P+(i/(N-1))*(W-2*P);});
+    var ys=eles.map(function(e){return H-P-((e-mn)/rng)*(H-2*P-4);});
+    var d='M'+xs[0]+','+ys[0];
+    for(var i=1;i<N;i++) d+=' L'+xs[i]+','+ys[i];
+    var area=d+' L'+xs[N-1]+','+H+' L'+xs[0]+','+H+'Z';
+    svg.innerHTML='<defs><linearGradient id="g'+svgId+'" x1="0" y1="0" x2="0" y2="1">'
+      +'<stop offset="0%" stop-color="'+color+'" stop-opacity=".2"/>'
+      +'<stop offset="100%" stop-color="'+color+'" stop-opacity=".0"/>'
+      +'</linearGradient></defs>'
+      +'<path d="'+area+'" fill="url(#g'+svgId+')"/>'
+      +'<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>';
+  }
+
+  ELEV.forEach(function(e,i){drawChart('ec'+i,e,DCOLS[i]);});
+})();
+
+// ── MAP PAGE ───────────────────────────────────────────
+var map=null,mapReady=false,is3d=true,activeDay=null;
+
+function showMap(){
+  document.getElementById('vi').hidden=true;
+  document.getElementById('vm').hidden=false;
+  if(!mapReady) initMap(); else if(map) map.resize();
+}
+function showInfo(){
+  document.getElementById('vm').hidden=true;
+  document.getElementById('vi').hidden=false;
+}
+
+function initMap(){
+  if(typeof maplibregl==='undefined'){
+    setTimeout(initMap,150); return;
+  }
+  mapReady=true;
+
+  map=new maplibregl.Map({
+    container:'map',
+    style:{
+      version:8,sources:{},layers:[],
+      glyphs:'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
+    },
+    center:[-119.716,37.998],zoom:10.4,pitch:50,bearing:-10,
+    antialias:true,attributionControl:false
+  });
+  map.addControl(new maplibregl.AttributionControl({compact:true}),'bottom-right');
+  map.addControl(new maplibregl.NavigationControl(),'bottom-right');
+
+  // Build map day bar
+  var bar=document.getElementById('mbar');
+  ['All','D1','D2','D3','D4'].forEach(function(lbl,i){
+    var b=document.createElement('button');
+    b.className='mday-tab'+(i===0?' on':'');
+    b.textContent=lbl;
+    if(i===0) b.style.background='var(--acc)',b.style.color='#fff';
+    b.addEventListener('click',function(){
+      if(i===0) flyAll();
+      else setMapDay(i-1);
+    });
+    bar.appendChild(b);
   });
 
-  /* Markers */
-  WP.forEach(function(wp){
-    var el=document.createElement("div");
-    var sz=wp.night?24:16;
-    el.style.cssText="width:"+sz+"px;height:"+sz+"px;border-radius:50%;"
-      +"border:2px solid "+wp.color+";background:rgba(8,10,14,.88);"
-      +"display:flex;align-items:center;justify-content:center;"
-      +"cursor:pointer;box-shadow:0 0 0 3px "+wp.color+"18;"
-      +"transition:transform .2s;font-size:"+(wp.night?9:7)+"px;"
-      +"color:"+wp.color+";font-family:JetBrains Mono,monospace;font-weight:500";
-    el.textContent=wp.night?"N"+wp.night:"★";
-    el.addEventListener("mouseenter",function(){el.style.transform="scale(1.25)"});
-    el.addEventListener("mouseleave",function(){el.style.transform="scale(1)"});
-    var pop=new maplibregl.Popup({offset:12,closeButton:true,maxWidth:"210px"})
-      .setHTML('<div class="pn" style="color:'+wp.color+'">'+wp.label+'</div>'
-        +'<div class="pname">'+wp.name+'</div>'
-        +'<div class="pele">'+wp.ele.toLocaleString()+' ft</div>');
-    new maplibregl.Marker({element:el,anchor:"center"})
-      .setLngLat([wp.lon,wp.lat]).setPopup(pop).addTo(map);
-  });
+  map.on('load',function(){
+    // Satellite
+    map.addSource('sat',{type:'raster',
+      tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+      tileSize:256,attribution:'© Esri, Maxar',maxzoom:18});
+    map.addLayer({id:'sat',type:'raster',source:'sat'});
 
-  map.resize();
-  buildTabs();
-  flyAll();
-});
+    // Labels
+    map.addSource('lbl',{type:'raster',
+      tiles:['https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
+      tileSize:256,maxzoom:18});
+    map.addLayer({id:'lbl',type:'raster',source:'lbl',paint:{'raster-opacity':0.75}});
 
-function buildTabs(){
-  var c=document.getElementById("tabs");
-  DAYS.forEach(function(d,i){
-    var b=document.createElement("button");
-    b.className="tab";b.id="t"+i;
-    b.innerHTML='<div class="td" style="background:'+d.color+'"></div>'
-      +'<div class="tl">'+d.lbl+'</div>'
-      +'<div class="tda">'+d.date+'</div>';
-    b.addEventListener("click",function(){setDay(i);});
-    c.appendChild(b);
+    // Terrain
+    try{
+      map.addSource('dem',{type:'raster-dem',
+        tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+        encoding:'terrarium',tileSize:256,maxzoom:14});
+      map.setTerrain({source:'dem',exaggeration:1.5});
+    }catch(e){}
+
+    // Routes
+    ROUTE.forEach(function(coords,i){
+      var data={type:'Feature',geometry:{type:'LineString',
+        coordinates:coords.map(function(c){return[c[0],c[1],c[2]]})}};
+      map.addSource('r'+i,{type:'geojson',data:data});
+      map.addLayer({id:'rg'+i,type:'line',source:'r'+i,
+        layout:{'line-join':'round','line-cap':'round'},
+        paint:{'line-color':DCOLS[i],'line-width':7,'line-opacity':0.1,'line-blur':4}});
+      map.addLayer({id:'rl'+i,type:'line',source:'r'+i,
+        layout:{'line-join':'round','line-cap':'round'},
+        paint:{'line-color':DCOLS[i],
+          'line-width':['interpolate',['linear'],['zoom'],8,2.5,14,5],
+          'line-opacity':0.9}});
+    });
+
+    // Waypoints as native GeoJSON — no lag
+    map.addSource('wps',{type:'geojson',data:{
+      type:'FeatureCollection',
+      features:WP_MAP.map(function(wp){
+        return{type:'Feature',
+          geometry:{type:'Point',coordinates:[wp.lon,wp.lat]},
+          properties:wp};
+      })
+    }});
+    map.addLayer({id:'wp-outer',type:'circle',source:'wps',
+      paint:{'circle-radius':11,'circle-color':['get','col'],
+        'circle-stroke-width':3,'circle-stroke-color':'#fff',
+        'circle-opacity':['case',['==',['get','night'],0],0.7,1]}});
+    map.addLayer({id:'wp-text',type:'symbol',source:'wps',
+      layout:{
+        'text-field':['case',['==',['get','night'],0],'',
+          ['concat','N',['to-string',['get','night']]]],
+        'text-font':['Open Sans Bold','Arial Unicode MS Bold'],
+        'text-size':9,'text-anchor':'center','text-allow-overlap':true
+      },
+      paint:{'text-color':'#ffffff'}});
+
+    // Popup on tap
+    map.on('click','wp-outer',function(e){
+      var wp=e.features[0].properties;
+      new maplibregl.Popup({offset:16,closeButton:true})
+        .setLngLat([wp.lon,wp.lat])
+        .setHTML('<div class="pu-night" style="color:'+wp.col+'">'+wp.label+'</div>'
+          +'<div class="pu-name">'+wp.name+'</div>'
+          +'<div class="pu-ele">'+Number(wp.ele).toLocaleString()+' ft</div>')
+        .addTo(map);
+    });
+    map.on('mouseenter','wp-outer',function(){map.getCanvas().style.cursor='pointer';});
+    map.on('mouseleave','wp-outer',function(){map.getCanvas().style.cursor='';});
+
+    map.resize();
+    flyAll();
   });
 }
 
-function setDay(i){
-  var d=DAYS[i];
-  document.querySelectorAll(".tab").forEach(function(t,j){
-    t.classList.toggle("on",j===i);
+var CAM=[
+  {center:[-119.748,37.956],zoom:12.5,pitch:50,bearing:85},
+  {center:[-119.668,37.990],zoom:11,pitch:56,bearing:-12},
+  {center:[-119.710,38.018],zoom:11,pitch:50,bearing:8},
+  {center:[-119.786,37.968],zoom:12.5,pitch:46,bearing:-165}
+];
+
+function setMapDay(i){
+  activeDay=i;
+  document.querySelectorAll('.mday-tab').forEach(function(t,j){
+    var on=j===i+1;
+    t.classList.toggle('on',on);
+    t.style.background=on?DCOLS[i]:'';
+    t.style.color=on?'#fff':'';
   });
-  document.getElementById("bAll").classList.remove("on");
-
-  var dc=document.getElementById("dc");
-  dc.innerHTML='<div class="dct" style="color:'+d.color+'">'+d.title+'</div>'
-    +'<div class="dcs">'+d.sub+'</div>'
-    +'<div class="sg">'
-    +'<div class="si"><div class="sl">Distance</div>'
-    +'<div class="sv">'+d.dist+'<span class="su">mi</span></div></div>'
-    +'<div class="si"><div class="sl">Elev Gain</div>'
-    +'<div class="sv">'+d.gain+'<span class="su">ft</span></div></div>'
-    +'<div class="si"><div class="sl">Elevation</div>'
-    +'<div class="sv" style="font-size:9.5px">'+d.se+'→'+d.ee
-    +'<span class="su">ft</span></div></div>'
-    +'</div>'
-    +'<div class="dn">'+d.note+'</div>';
-  bump(dc);
-  drawChart(ROUTE[i],[d.color],null);
-
-  DAYS.forEach(function(_,j){
-    if(!map.getLayer("rl"+j))return;
+  ROUTE.forEach(function(_,j){
+    if(!map.getLayer('rl'+j))return;
     var on=j===i;
-    map.setPaintProperty("rl"+j,"line-opacity",on?0.9:0.18);
-    map.setPaintProperty("rg"+j,"line-opacity",on?0.12:0.03);
-    map.setPaintProperty("rl"+j,"line-width",on
-      ?["interpolate",["linear"],["zoom"],8,3,14,5.5]
-      :["interpolate",["linear"],["zoom"],8,1.5,14,3]);
+    map.setPaintProperty('rl'+j,'line-opacity',on?0.95:0.18);
+    map.setPaintProperty('rg'+j,'line-opacity',on?0.12:0.02);
+    map.setPaintProperty('rl'+j,'line-width',on
+      ?['interpolate',['linear'],['zoom'],8,3.5,14,6]
+      :['interpolate',['linear'],['zoom'],8,1.5,14,3]);
   });
-  map.flyTo({center:d.cam.center,zoom:d.cam.zoom,
-    pitch:d.cam.pitch,bearing:d.cam.bearing,duration:2200,essential:true});
-  if(window.innerWidth<768){
-    document.getElementById("panel").classList.add("open");
-  }
+  map.flyTo({center:CAM[i].center,zoom:CAM[i].zoom,
+    pitch:CAM[i].pitch,bearing:CAM[i].bearing,duration:2000,essential:true});
 }
 
 function flyAll(){
-  document.querySelectorAll(".tab").forEach(function(t){t.classList.remove("on");});
-  document.getElementById("bAll").classList.add("on");
-  DAYS.forEach(function(_,j){
-    if(!map.getLayer("rl"+j))return;
-    map.setPaintProperty("rl"+j,"line-opacity",0.9);
-    map.setPaintProperty("rg"+j,"line-opacity",0.12);
-    map.setPaintProperty("rl"+j,"line-width",
-      ["interpolate",["linear"],["zoom"],8,2,14,4.5]);
+  activeDay=null;
+  document.querySelectorAll('.mday-tab').forEach(function(t,j){
+    var on=j===0;
+    t.classList.toggle('on',on);
+    t.style.background=on?'var(--acc)':'';
+    t.style.color=on?'#fff':'';
   });
-  map.flyTo({center:OV.center,zoom:OV.zoom,
-    pitch:OV.pitch,bearing:OV.bearing,duration:2000,essential:true});
-
-  var dc=document.getElementById("dc");
-  var rows=DAYS.map(function(d){
-    return '<tr><td><span style="display:inline-block;width:7px;height:7px;'
-      +'border-radius:50%;background:'+d.color+';margin-right:5px;'
-      +'vertical-align:middle"></span>'+d.lbl+' '+d.date+'</td>'
-      +'<td style="color:var(--dim)">'+d.sub.split("→")[1].trim()+'</td>'
-      +'<td class="n">'+d.dist+' mi</td>'
-      +'<td class="n">+'+d.gain+' ft</td></tr>';
-  }).join("");
-  dc.innerHTML='<div class="dct" style="color:var(--acc)">Full Route Overview</div>'
-    +'<div class="dcs">Counterclockwise loop · O’Shaughnessy Dam</div>'
-    +'<div class="sg sg4">'
-    +'<div class="si"><div class="sl">Total</div>'
-    +'<div class="sv">32.6<span class="su">mi</span></div></div>'
-    +'<div class="si"><div class="sl">Gain</div>'
-    +'<div class="sv">7,182<span class="su">ft</span></div></div>'
-    +'<div class="si"><div class="sl">Days</div>'
-    +'<div class="sv">4</div></div>'
-    +'<div class="si"><div class="sl">Hikers</div>'
-    +'<div class="sv">2</div></div>'
-    +'</div>'
-    +'<table class="ovt">'+rows+'</table>';
-  bump(dc);
-
-  var all=ROUTE[0].concat(ROUTE[1],ROUTE[2],ROUTE[3]);
-  var sp=[ROUTE[0].length,
-          ROUTE[0].length+ROUTE[1].length,
-          ROUTE[0].length+ROUTE[1].length+ROUTE[2].length];
-  drawChart(all,DAYS.map(function(d){return d.color;}),sp);
-}
-
-function drawChart(coords,colors,splits){
-  var svg=document.getElementById("ec");
-  var W=300,H=48,P=3,N=100;
-  var i,idx,eles=[];
-  for(i=0;i<N;i++){
-    idx=Math.round(i*(coords.length-1)/(N-1));
-    eles.push(coords[idx][2]);
-  }
-  var mn=eles[0],mx=eles[0];
-  for(i=1;i<N;i++){if(eles[i]<mn)mn=eles[i];if(eles[i]>mx)mx=eles[i];}
-  var rng=mx-mn||1;
-  var xs=[],ys=[];
-  for(i=0;i<N;i++){
-    xs.push(P+(i/(N-1))*(W-2*P));
-    ys.push(H-P-((eles[i]-mn)/rng)*(H-2*P-5));
-  }
-  var fd="M"+xs[0]+" "+ys[0];
-  for(i=1;i<N;i++)fd+=" L"+xs[i]+" "+ys[i];
-  var area=fd+" L"+xs[N-1]+" "+H+" L"+xs[0]+" "+H+"Z";
-  var fc=colors.length===1?colors[0]:"#7ab5d4";
-  var lines="";
-  if(!splits||colors.length===1){
-    lines='<path d="'+fd+'" fill="none" stroke="'+colors[0]
-      +'" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>';
-  }else{
-    var total=coords.length;
-    var fracs=splits.map(function(s){return s/total;});
-    var prev=0;
-    for(var ci=0;ci<colors.length;ci++){
-      var ef=ci<fracs.length?fracs[ci]:1;
-      var i0=Math.round(prev*(N-1));
-      var i1=Math.min(Math.round(ef*(N-1)),N-1);
-      if(i0>=i1){prev=ef;continue;}
-      var seg="M"+xs[i0]+" "+ys[i0];
-      for(var k=i0+1;k<=i1;k++)seg+=" L"+xs[k]+" "+ys[k];
-      lines+='<path d="'+seg+'" fill="none" stroke="'+colors[ci]
-        +'" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>';
-      prev=ef;
-    }
-  }
-  svg.innerHTML='<defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">'
-    +'<stop offset="0%" stop-color="'+fc+'" stop-opacity=".18"/>'
-    +'<stop offset="100%" stop-color="'+fc+'" stop-opacity=".01"/>'
-    +'</linearGradient></defs>'
-    +'<path d="'+area+'" fill="url(#eg)"/>'+lines;
+  ROUTE.forEach(function(_,j){
+    if(!map.getLayer('rl'+j))return;
+    map.setPaintProperty('rl'+j,'line-opacity',0.9);
+    map.setPaintProperty('rg'+j,'line-opacity',0.1);
+    map.setPaintProperty('rl'+j,'line-width',['interpolate',['linear'],['zoom'],8,2.5,14,5]);
+  });
+  map.flyTo({center:[-119.716,37.998],zoom:10.4,pitch:50,bearing:-10,duration:2000,essential:true});
 }
 
 function toggle3d(){
   is3d=!is3d;
+  document.getElementById('b3d').classList.toggle('on',is3d);
   try{
-    if(is3d){map.setTerrain({source:"dem",exaggeration:1.5});}
-    else{map.setTerrain(null);}
+    if(is3d)map.setTerrain({source:'dem',exaggeration:1.5});
+    else map.setTerrain(null);
   }catch(e){}
-  map.easeTo({pitch:is3d?50:0,duration:700});
-  document.getElementById("b3d").classList.toggle("on",is3d);
+  map.easeTo({pitch:is3d?50:0,duration:600});
 }
-
-function toggleSat(){
-  isSat=!isSat;
-  try{
-    if(map.getLayer("sat")){
-      map.setPaintProperty("sat","raster-opacity",isSat?0.92:0);
-    }
-  }catch(e){}
-  document.getElementById("bSat").classList.toggle("on",isSat);
-}
-
-var minimized=false;
-function toggleMin(){
-  minimized=!minimized;
-  document.getElementById("panel").classList.toggle("mini",minimized);
-  document.getElementById("pb").style.visibility=minimized?"hidden":"visible";
-  document.getElementById("mb").textContent=minimized?"+":"−";
-}
-
-/* desktop drag */
-(function(){
-  var panel=document.getElementById("panel");
-  var hdr=document.getElementById("ph");
-  var active=false,ox=0,oy=0,pl=0,pt=0;
-  hdr.addEventListener("mousedown",function(e){
-    if(window.innerWidth<768)return;
-    if(e.target.closest(".ib"))return;
-    var r=panel.getBoundingClientRect();
-    panel.style.right="auto";panel.style.bottom="auto";
-    panel.style.left=r.left+"px";panel.style.top=r.top+"px";
-    active=true;pl=r.left;pt=r.top;
-    ox=e.clientX-pl;oy=e.clientY-pt;
-    panel.classList.add("drag");
-    document.body.style.userSelect="none";
-    e.preventDefault();
-  });
-  document.addEventListener("mousemove",function(e){
-    if(!active)return;
-    var pw=panel.offsetWidth,ph=panel.offsetHeight;
-    var nl=Math.max(0,Math.min(window.innerWidth-pw,e.clientX-ox));
-    var nt=Math.max(54,Math.min(window.innerHeight-ph-12,e.clientY-oy));
-    panel.style.left=nl+"px";panel.style.top=nt+"px";
-  });
-  document.addEventListener("mouseup",function(){
-    if(!active)return;active=false;
-    panel.classList.remove("drag");document.body.style.userSelect="";
-  });
-})();
-
-/* mobile bottom sheet */
-(function(){
-  var panel=document.getElementById("panel");
-  var dh=document.getElementById("dh");
-  var active=false,sy=0,sh=0;
-  dh.addEventListener("touchstart",function(e){
-    active=true;sy=e.touches[0].clientY;
-    sh=panel.getBoundingClientRect().height;
-    e.preventDefault();
-  },{passive:false});
-  document.addEventListener("touchmove",function(e){
-    if(!active)return;
-    var nh=Math.max(72,Math.min(window.innerHeight*.9,
-      sh+(sy-e.touches[0].clientY)));
-    panel.style.height=nh+"px";panel.style.transition="none";
-  },{passive:true});
-  document.addEventListener("touchend",function(){
-    if(!active)return;active=false;panel.style.transition="";
-    var h=panel.getBoundingClientRect().height,vh=window.innerHeight;
-    if(h<vh*.22){panel.style.height="72px";panel.classList.remove("open");}
-    else{panel.style.height=Math.round(vh*.7)+"px";panel.classList.add("open");}
-  });
-})();
-
-function bump(el){el.style.animation="none";void el.offsetWidth;el.style.animation="";}
 </script>
 </body>
 </html>
